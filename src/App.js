@@ -1,25 +1,81 @@
-import logo from './logo.svg';
-import './App.css';
+import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
+import { AuthProvider } from "./contexts/AuthContext"
+import Navbar from "./components/layout/Navbar"
+import Footer from "./components/layout/Footer"
+import Home from "./pages/Home"
+import Login from "./pages/Login"
+import Register from "./pages/Register"
+import Dashboard from "./pages/Dashboard"
+import ResourceDetails from "./pages/ResourceDetails"
+import UploadResource from "./pages/UploadResource"
+import Profile from "./pages/Profile"
+import Bookmarks from "./pages/Bookmarks"
+import StudyGroups from "./pages/StudyGroups"
+import Leaderboard from "./pages/Leaderboard"
+import PrivateRoute from "./components/auth/PrivateRoute"
+import "./index.css"
 
 function App() {
   return (
-    <div className="App">
-      <header className="App-header">
-        <img src={logo} className="App-logo" alt="logo" />
-        <p>
-          Edit <code>src/App.js</code> and save to reload.
-        </p>
-        <a
-          className="App-link"
-          href="https://reactjs.org"
-          target="_blank"
-          rel="noopener noreferrer"
-        >
-          Learn React
-        </a>
-      </header>
-    </div>
-  );
+    <Router>
+      <AuthProvider>
+        <div className="flex flex-col min-h-screen">
+          <Navbar />
+          <main className="flex-grow container mx-auto px-4 py-8">
+            <Routes>
+              <Route path="/" element={<Home />} />
+              <Route path="/login" element={<Login />} />
+              <Route path="/register" element={<Register />} />
+              <Route path="/resources/:id" element={<ResourceDetails />} />
+              <Route
+                path="/dashboard"
+                element={
+                  <PrivateRoute>
+                    <Dashboard />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/upload"
+                element={
+                  <PrivateRoute>
+                    <UploadResource />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/profile"
+                element={
+                  <PrivateRoute>
+                    <Profile />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/bookmarks"
+                element={
+                  <PrivateRoute>
+                    <Bookmarks />
+                  </PrivateRoute>
+                }
+              />
+              <Route
+                path="/study-groups"
+                element={
+                  <PrivateRoute>
+                    <StudyGroups />
+                  </PrivateRoute>
+                }
+              />
+              <Route path="/leaderboard" element={<Leaderboard />} />
+            </Routes>
+          </main>
+          <Footer />
+        </div>
+      </AuthProvider>
+    </Router>
+  )
 }
 
-export default App;
+export default App
+

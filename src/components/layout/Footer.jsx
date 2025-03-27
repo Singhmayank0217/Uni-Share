@@ -57,12 +57,9 @@ const Footer = () => {
             </ul>
           </div>
           <div>
-            <h4 className="text-lg font-semibold mb-4">Contact</h4>
+            <h4 className="text-lg font-semibold mb-4">Team</h4>
             <p className="text-gray-300">
-              Have questions or suggestions? <br />
-              <a href="mailto:support@unishare.com" className="hover:text-white">
-                support@unishare.com
-              </a>
+              MayanK Singh & Rahul Choudhary <br />
             </p>
           </div>
         </div>
