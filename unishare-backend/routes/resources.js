@@ -350,7 +350,7 @@ router.post("/:id/reviews", auth, async (req, res) => {
     res.json({ message: "Review added successfully" })
   } catch (error) {
     console.error("Add review error:", error)
-    res.status(500).json({ message: "Server error" })
+    res.status(500).json({ message: error.message || "Failed to submit review" })
   }
 })
 

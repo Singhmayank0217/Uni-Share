@@ -32,6 +32,12 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
 }
 
+// Create study group uploads directory
+const studyGroupUploadsDir = path.join(uploadsDir, "study-groups")
+if (!fs.existsSync(studyGroupUploadsDir)) {
+  fs.mkdirSync(studyGroupUploadsDir, { recursive: true })
+}
+
 // Static files
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 

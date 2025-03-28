@@ -5,8 +5,10 @@ import { Link } from "react-router-dom"
 import api from "../services/api"
 import ResourceCard from "../components/resources/ResourceCard"
 import FilterBar from "../components/resources/FilterBar"
+import { useAuth } from "../contexts/AuthContext"
 
 const Home = () => {
+  const { currentUser } = useAuth()
   const [resources, setResources] = useState([])
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
@@ -55,15 +57,29 @@ const Home = () => {
           <h1 className="text-4xl font-bold mb-4">Welcome to UniShare</h1>
           <p className="text-xl mb-8">Share and discover educational resources with fellow university students</p>
           <div className="flex justify-center gap-4">
-            <Link
-              to="/register"
-              className="bg-white text-blue-600 px-6 py-3 rounded-md font-semibold hover:bg-blue-100"
-            >
-              Join Now
-            </Link>
-            <Link to="/upload" className="bg-blue-700 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-800">
-              Share a Resource
-            </Link>
+            {!currentUser ? (
+              <>
+                <Link
+                  to="/register"
+                  className="bg-white text-blue-600 px-6 py-3 rounded-md font-semibold hover:bg-blue-100"
+                >
+                  Join Now
+                </Link>
+                <Link
+                  to="/login"
+                  className="bg-blue-700 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-800"
+                >
+                  Login
+                </Link>
+              </>
+            ) : (
+              <Link
+                to="/upload"
+                className="bg-blue-700 text-white px-6 py-3 rounded-md font-semibold hover:bg-blue-800"
+              >
+                Share a Resource
+              </Link>
+            )}
           </div>
         </div>
       </section>

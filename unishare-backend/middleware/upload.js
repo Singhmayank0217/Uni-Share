@@ -1,43 +1,56 @@
-import multer from 'multer';
-import path from 'path';
+import multer from "multer"
+import path from "path"
+import fs from "fs"
+import { fileURLToPath } from "url"
 
-// Allowed file extensions (normalized to lowercase)
-const allowedExtensions = ['.pdf', '.doc', '.docx', '.ppt', '.pptx', '.xls', '.xlsx', '.zip', '.jpg', '.png', '.gif','.txt'];
+const __filename = fileURLToPath(import.meta.url)
+const __dirname = path.dirname(__filename)
 
-// Multer storage configuration
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, "..", "uploads")
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+}
+
+// Create study group uploads directory
+const studyGroupUploadsDir = path.join(uploadsDir, "study-groups")
+if (!fs.existsSync(studyGroupUploadsDir)) {
+  fs.mkdirSync(studyGroupUploadsDir, { recursive: true })
+}
+
+// Configure storage
 const storage = multer.diskStorage({
   destination: (req, file, cb) => {
-    cb(null, 'uploads/');
+    // Check if this is a study group upload
+    if (req.baseUrl.includes("study-groups") && req.params.id) {
+      const groupDir = path.join(studyGroupUploadsDir, req.params.id)
+      if (!fs.existsSync(groupDir)) {
+        fs.mkdirSync(groupDir, { recursive: true })
+      }
+      cb(null, groupDir)
+    } else {
+      cb(null, uploadsDir)
+    }
   },
   filename: (req, file, cb) => {
-    cb(null, Date.now() + '-' + file.originalname);
-  }
-});
+    const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
+    cb(null, uniqueSuffix + path.extname(file.originalname))
+  },
+})
 
-// File filter function
+// File filter
 const fileFilter = (req, file, cb) => {
-  const fileExt = path.extname(file.originalname || '').toLowerCase();
+  // Accept all file types for now
+  cb(null, true)
+}
 
-  console.log(`📂 Uploading file: ${file.originalname} (${fileExt})`); // Debug log
-
-  if (!fileExt) {
-    console.error('❌ File has no extension');
-    return cb(new Error('File must have an extension'), false);
-  }
-
-  if (allowedExtensions.includes(fileExt)) {
-    cb(null, true);
-  } else {
-    console.error(`❌ Rejected file: ${file.originalname} (type: ${fileExt})`);
-    cb(new Error('Invalid file type. Allowed types: ' + allowedExtensions.join(', ')), false);
-  }
-};
-
-// Multer configuration
 const upload = multer({
   storage: storage,
   fileFilter: fileFilter,
-  limits: { fileSize: 10 * 1024 * 1024 } // 10MB limit
-});
+  limits: {
+    fileSize: 10 * 1024 * 1024, // 10MB limit
+  },
+})
 
-export default upload;
+export default upload
+

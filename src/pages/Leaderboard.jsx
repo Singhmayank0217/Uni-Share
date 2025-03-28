@@ -77,6 +77,11 @@ const Leaderboard = () => {
         </div>
       ) : error ? (
         <div className="bg-red-100 text-red-700 p-4 rounded-md text-center">{error}</div>
+      ) : users.length === 0 ? (
+        <div className="text-center py-12">
+          <h3 className="text-xl font-semibold mb-2">No users found</h3>
+          <p className="text-gray-600">Be the first to upload resources and appear on the leaderboard!</p>
+        </div>
       ) : (
         <div className="bg-white rounded-lg shadow-md overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
@@ -135,7 +140,11 @@ const Leaderboard = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="text-sm text-gray-900 font-semibold">
-                      {activeTab === "ratings" ? user.averageRating.toFixed(1) + " ⭐" : user[activeTab]}
+                      {activeTab === "ratings"
+                        ? (user.averageRating || 0).toFixed(1) + " ⭐"
+                        : activeTab === "downloads"
+                          ? user.downloads
+                          : user.uploads}
                     </div>
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap text-sm text-gray-500">{user.resourceCount} resources</td>
