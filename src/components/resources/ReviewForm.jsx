@@ -1,6 +1,8 @@
 "use client"
 
 import { useState } from "react"
+import { FiStar } from "react-icons/fi"
+import toast from "react-hot-toast"
 
 const ReviewForm = ({ onSubmit }) => {
   const [rating, setRating] = useState(0)
@@ -14,7 +16,9 @@ const ReviewForm = ({ onSubmit }) => {
     e.preventDefault()
 
     if (rating === 0) {
-      return setError("Please select a rating")
+      setError("Please select a rating")
+      toast.error("Please select a rating")
+      return
     }
 
     try {
@@ -28,16 +32,22 @@ const ReviewForm = ({ onSubmit }) => {
       setRating(0)
       setComment("")
       setSuccess("Review submitted successfully!")
+      toast.success("Review submitted successfully!")
     } catch (err) {
       console.error("Error submitting review:", err)
-      setError(err.response?.data?.message || "Failed to submit review. Please try again.")
+      const errorMessage = err.response?.data?.message || "Failed to submit review. Please try again."
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }
   }
 
   return (
-    <form onSubmit={handleSubmit}>
+    <form
+      onSubmit={handleSubmit}
+      className="bg-white dark:bg-gray-800 p-6 rounded-lg shadow-md border border-gray-200 dark:border-gray-700"
+    >
       {error && <div className="bg-red-100 text-red-700 p-3 rounded-md mb-4 shadow-sm">{error}</div>}
       {success && <div className="bg-green-100 text-green-700 p-3 rounded-md mb-4 shadow-sm">{success}</div>}
 
@@ -54,9 +64,9 @@ const ReviewForm = ({ onSubmit }) => {
               onMouseLeave={() => setHoverRating(0)}
             >
               {star <= (hoverRating || rating) ? (
-                <span className="text-yellow-400">★</span>
+                <FiStar className="w-8 h-8 fill-yellow-400 text-yellow-400" />
               ) : (
-                <span className="text-gray-300 dark:text-gray-600">☆</span>
+                <FiStar className="w-8 h-8 text-gray-300 dark:text-gray-600" />
               )}
             </button>
           ))}
@@ -79,7 +89,7 @@ const ReviewForm = ({ onSubmit }) => {
 
       <button
         type="submit"
-        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 shadow-sm transition-all"
+        className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-4 py-2 rounded-md font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 disabled:opacity-50 shadow-sm transition-all w-full"
         disabled={loading}
       >
         {loading ? "Submitting..." : "Submit Review"}

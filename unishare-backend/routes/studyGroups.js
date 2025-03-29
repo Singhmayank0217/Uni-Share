@@ -141,7 +141,7 @@ router.post("/:id/messages", auth, upload.single("file"), async (req, res) => {
     const groupId = req.params.id
 
     // Either content or file must be provided
-    if ((!content || content.trim() === "") && !req.file) {
+    if (!req.file && (!content || content.trim() === "")) {
       return res.status(400).json({ message: "Message content or file is required" })
     }
 
@@ -167,12 +167,18 @@ router.post("/:id/messages", auth, upload.single("file"), async (req, res) => {
     // Prepare message object
     const newMessage = {
       sender: req.user._id,
-      content: content || "",
+      content: content || "", // Use empty string if content is not provided
       createdAt: new Date(),
     }
 
     // Add file info if a file was uploaded
     if (req.file) {
+      // Create the directory if it doesn't exist
+      const groupDir = path.join(__dirname, "..", "uploads", "study-groups", groupId)
+      if (!fs.existsSync(groupDir)) {
+        fs.mkdirSync(groupDir, { recursive: true })
+      }
+
       newMessage.fileUrl = `/uploads/study-groups/${groupId}/${req.file.filename}`
       newMessage.fileName = req.file.originalname
       newMessage.fileType = req.file.mimetype
@@ -193,7 +199,11 @@ router.post("/:id/messages", auth, upload.single("file"), async (req, res) => {
     console.error("Add message error:", error)
     // If file was uploaded, delete it on error
     if (req.file) {
-      fs.unlinkSync(req.file.path)
+      try {
+        fs.unlinkSync(req.file.path)
+      } catch (unlinkError) {
+        console.error("Error deleting file:", unlinkError)
+      }
     }
     res.status(400).json({ message: error.message || "Failed to add message" })
   }

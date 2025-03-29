@@ -324,28 +324,46 @@ router.post("/:id/reviews", auth, async (req, res) => {
       (review) => review.user && review.user.toString() === req.user._id.toString(),
     )
 
-    if (existingReviewIndex !== -1) {
-      // Update existing review
-      resource.reviews[existingReviewIndex].rating = rating
-      resource.reviews[existingReviewIndex].comment = comment
-    } else {
-      // Add new review
-      resource.reviews.push({
-        user: req.user._id,
-        rating,
-        comment,
-      })
+    // Use direct MongoDB update to avoid validation issues
+    const updateOperation =
+      existingReviewIndex !== -1
+        ? {
+            $set: {
+              [`reviews.${existingReviewIndex}.rating`]: rating,
+              [`reviews.${existingReviewIndex}.comment`]: comment || "",
+            },
+          }
+        : {
+            $push: {
+              reviews: {
+                user: req.user._id,
+                rating,
+                comment: comment || "",
+                createdAt: new Date(),
+              },
+            },
+          }
 
-      // Increment user's review count
+    // If it's a new review, increment the user's review count
+    if (existingReviewIndex === -1) {
       await User.findByIdAndUpdate(req.user._id, { $inc: { reviewCount: 1 } })
     }
 
-    // Recalculate average rating
-    const totalRating = resource.reviews.reduce((sum, review) => sum + review.rating, 0)
-    resource.averageRating = totalRating / resource.reviews.length
-    resource.totalRatings = resource.reviews.length
+    // Update the resource
+    await Resource.findByIdAndUpdate(resourceId, updateOperation)
 
-    await resource.save()
+    // Recalculate average rating
+    const updatedResource = await Resource.findById(resourceId)
+    const totalRating = updatedResource.reviews.reduce((sum, review) => sum + review.rating, 0)
+    const averageRating = totalRating / updatedResource.reviews.length
+
+    // Update average rating and total ratings
+    await Resource.findByIdAndUpdate(resourceId, {
+      $set: {
+        averageRating,
+        totalRatings: updatedResource.reviews.length,
+      },
+    })
 
     res.json({ message: "Review added successfully" })
   } catch (error) {

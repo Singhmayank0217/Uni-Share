@@ -42,7 +42,7 @@ const studyGroupSchema = new mongoose.Schema(
         },
         content: {
           type: String,
-          required: true,
+          default: "", // Changed from required to default empty string
         },
         fileUrl: {
           type: String,

@@ -38,7 +38,7 @@ if (!fs.existsSync(studyGroupUploadsDir)) {
   fs.mkdirSync(studyGroupUploadsDir, { recursive: true })
 }
 
-// Static files
+// Static files - make sure this is properly configured
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 // Routes
