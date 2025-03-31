@@ -71,3 +71,9 @@ code {
   @apply transition-all duration-300 hover:shadow-lg transform hover:-translate-y-1;
 }
 
+/* Background pattern */
+.bg-pattern {
+  background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
+  background-size: 20px 20px;
+}
+

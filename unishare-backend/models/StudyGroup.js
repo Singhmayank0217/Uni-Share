@@ -33,35 +33,6 @@ const studyGroupSchema = new mongoose.Schema(
         ref: "User",
       },
     ],
-    messages: [
-      {
-        sender: {
-          type: mongoose.Schema.Types.ObjectId,
-          ref: "User",
-          required: true,
-        },
-        content: {
-          type: String,
-          default: "", // Changed from required to default empty string
-        },
-        fileUrl: {
-          type: String,
-          default: null,
-        },
-        fileName: {
-          type: String,
-          default: null,
-        },
-        fileType: {
-          type: String,
-          default: null,
-        },
-        createdAt: {
-          type: Date,
-          default: Date.now,
-        },
-      },
-    ],
   },
   {
     timestamps: true,

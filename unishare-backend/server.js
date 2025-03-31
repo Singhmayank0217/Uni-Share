@@ -4,7 +4,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
-import fs from "fs" // Import the 'fs' module
+import fs from "fs"
 import authRoutes from "./routes/auth.js"
 import userRoutes from "./routes/users.js"
 import resourceRoutes from "./routes/resources.js"
@@ -12,6 +12,7 @@ import subjectRoutes from "./routes/subjects.js"
 import branchRoutes from "./routes/branches.js"
 import studyGroupRoutes from "./routes/studyGroups.js"
 import leaderboardRoutes from "./routes/leaderboard.js"
+import { scheduleMessageCleanup } from "./utils/messageCleanup.js"
 
 dotenv.config()
 
@@ -55,6 +56,10 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("Connected to MongoDB")
+
+    // Schedule message cleanup task
+    scheduleMessageCleanup()
+
     app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
     })

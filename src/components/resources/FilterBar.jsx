@@ -6,14 +6,7 @@ import api from "../../services/api"
 const FilterBar = ({ filters, onFilterChange }) => {
   const [branches, setBranches] = useState([])
   const [subjects, setSubjects] = useState([])
-  const [categories, setCategories] = useState([
-    "Notes",
-    "Past Papers",
-    "Assignments",
-    "Presentations",
-    "Books",
-    "Others",
-  ])
+  const [categories] = useState(["Notes", "Past Papers", "Assignments", "Presentations", "Books", "Others"])
   const [loading, setLoading] = useState(false)
   const [semesters] = useState([1, 2, 3, 4, 5, 6, 7, 8])
 
@@ -54,15 +47,15 @@ const FilterBar = ({ filters, onFilterChange }) => {
   }
 
   return (
-    <div className="bg-white rounded-lg shadow-md p-4 mb-6">
+    <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-4 mb-6 border border-gray-200 dark:border-gray-700">
       <div className="grid grid-cols-1 md:grid-cols-5 gap-4">
         <div>
-          <label htmlFor="branch" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="branch" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Branch
           </label>
           <select
             id="branch"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
             value={filters.branch}
             onChange={(e) => onFilterChange({ branch: e.target.value, subject: "" })}
           >
@@ -76,12 +69,12 @@ const FilterBar = ({ filters, onFilterChange }) => {
         </div>
 
         <div>
-          <label htmlFor="semester" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="semester" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Semester
           </label>
           <select
             id="semester"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
             value={filters.semester}
             onChange={(e) => onFilterChange({ semester: e.target.value, subject: "" })}
           >
@@ -95,12 +88,12 @@ const FilterBar = ({ filters, onFilterChange }) => {
         </div>
 
         <div>
-          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="subject" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Subject
           </label>
           <select
             id="subject"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
             value={filters.subject}
             onChange={(e) => onFilterChange({ subject: e.target.value })}
             disabled={loading || !filters.branch || !filters.semester}
@@ -115,12 +108,12 @@ const FilterBar = ({ filters, onFilterChange }) => {
         </div>
 
         <div>
-          <label htmlFor="category" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="category" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Category
           </label>
           <select
             id="category"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
             value={filters.category}
             onChange={(e) => onFilterChange({ category: e.target.value })}
           >
@@ -134,12 +127,12 @@ const FilterBar = ({ filters, onFilterChange }) => {
         </div>
 
         <div>
-          <label htmlFor="sortBy" className="block text-sm font-medium text-gray-700 mb-1">
+          <label htmlFor="sortBy" className="block text-sm font-medium text-gray-700 dark:text-gray-300 mb-1">
             Sort By
           </label>
           <select
             id="sortBy"
-            className="w-full border border-gray-300 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-blue-500"
+            className="w-full border border-gray-300 dark:border-gray-600 rounded-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
             value={filters.sortBy}
             onChange={(e) => onFilterChange({ sortBy: e.target.value })}
           >
