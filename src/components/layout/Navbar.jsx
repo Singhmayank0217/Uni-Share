@@ -28,14 +28,14 @@ const Navbar = () => {
   }
 
   return (
-    <nav className="bg-gradient-to-r from-blue-600 to-purple-600 dark:from-gray-800 dark:to-gray-900 text-white shadow-md">
+    <nav className="bg-gradient-to-r from-cyan-500 to-sky-800 dark:from-gray-800 dark:to-gray-900 text-white shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="text-2xl font-bold flex items-center">
-            <span className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 mr-2">
+            <span className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-purple-900 dark:text-white mr-1">
               Uni
             </span>
-            <span>Share</span>
+            <span className=" bg-gradient-to-r from-blue-800 to-purple-900 dark:text-white text-transparent bg-clip-text">Share</span>
           </Link>
 
           {/* Desktop Navigation */}
@@ -94,8 +94,8 @@ const Navbar = () => {
                   to="/register"
                   className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-md font-semibold hover:bg-blue-100 border border-white flex items-center gap-1"
                 >
-                  <FiUserPlus className="text-blue-600" />{" "}
-                  <span className="bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
+                  <FiUserPlus className="text-white dark:text-white" />{" "}
+                  <span className="text-white dark:text-white bg-clip-text text-transparent">
                     Sign Up
                   </span>
                 </Link>
