@@ -72,13 +72,13 @@ const Navbar = () => {
                   <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
                     <Link
                       to="/profile"
-                      className="block px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
+                      className=" px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
                     >
                       <FiUser /> Profile
                     </Link>
                     <button
                       onClick={handleLogout}
-                      className="block w-full text-left px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
+                      className=" w-full text-left px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
                     >
                       <FiLogOut /> Logout
                     </button>
@@ -128,43 +128,43 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pb-4">
-            <Link to="/" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+            <Link to="/" className=" py-2 hover:text-blue-200 flex items-center gap-2">
               <FiHome /> Home
             </Link>
-            <Link to="/leaderboard" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+            <Link to="/leaderboard" className=" py-2 hover:text-blue-200 flex items-center gap-2">
               <FiAward /> Leaderboard
             </Link>
 
             {currentUser ? (
               <>
-                <Link to="/dashboard" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/dashboard" className=" py-2 hover:text-blue-200 flex items-center gap-2">
                   <FiGrid /> Dashboard
                 </Link>
-                <Link to="/upload" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/upload" className=" py-2 hover:text-blue-200 flex items-center gap-2">
                   <FiUpload /> Upload
                 </Link>
-                <Link to="/bookmarks" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/bookmarks" className=" py-2 hover:text-blue-200 flex items-center gap-2">
                   <FiBookmark /> Bookmarks
                 </Link>
-                <Link to="/study-groups" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/study-groups" className=" py-2 hover:text-blue-200 flex items-center gap-2">
                   <FiUsers /> Study Groups
                 </Link>
-                <Link to="/profile" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/profile" className="py-2 hover:text-blue-200 flex items-center gap-2">
                   <FiUser /> Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className="block py-2 hover:text-blue-200 w-full text-left flex items-center gap-2"
+                  className=" py-2 hover:text-blue-200 w-full text-left flex items-center gap-2"
                 >
                   <FiLogOut /> Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/login" className=" py-2 hover:text-blue-200 flex items-center gap-2">
                   <FiLogIn /> Login
                 </Link>
-                <Link to="/register" className="block py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/register" className=" py-2 hover:text-blue-200 flex items-center gap-2">
                   <FiUserPlus /> Sign Up
                 </Link>
               </>

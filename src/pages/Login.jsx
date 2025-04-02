@@ -65,7 +65,7 @@ const Login = () => {
   }
 
   return (
-    <div className="min-h-screen flex items-center justify-center py-16 px-4 sm:px-6 lg:px-8 relative z-10 auth-container">
+    <div className="min-h-screen flex items-start justify-center py-16 px-4 sm:px-6 lg:px-8 relative z-10 auth-container">
       <div className="max-w-md w-full relative">
         {/* Decorative elements */}
         <div className="absolute -top-20 -left-20 w-40 h-40 bg-gradient-to-r from-emerald-300 to-teal-300 dark:from-emerald-600 dark:to-teal-600 rounded-full mix-blend-multiply filter blur-xl opacity-70 animate-blob"></div>
