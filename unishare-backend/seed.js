@@ -47,8 +47,19 @@ async function seedDatabase() {
     // CSE Subjects
     const cse = insertedBranches.find((b) => b.code === "CSE")
     subjects.push(
-      { name: "Programming Fundamentals", code: "CS101", branch: cse._id, semester: 1 },
+      // Semester 1 - Added the requested subjects
+      { name: "Introduction to Problem Solving", code: "CS101", branch: cse._id, semester: 1 },
+      { name: "Digital Electronics", code: "CS102", branch: cse._id, semester: 1 },
+      { name: "Math-1", code: "MA101", branch: cse._id, semester: 1 },
+      { name: "Biology", code: "BIO101", branch: cse._id, semester: 1 },
+
+      // Semester 2 - Added the requested subjects
+      { name: "BEEE", code: "EE201", branch: cse._id, semester: 2 },
+      { name: "Math-2", code: "MA201", branch: cse._id, semester: 2 },
+      { name: "Physics", code: "PH201", branch: cse._id, semester: 2 },
       { name: "Data Structures", code: "CS201", branch: cse._id, semester: 2 },
+
+      // Other semesters
       { name: "Algorithms", code: "CS301", branch: cse._id, semester: 3 },
       { name: "Database Systems", code: "CS401", branch: cse._id, semester: 4 },
       { name: "Operating Systems", code: "CS501", branch: cse._id, semester: 5 },

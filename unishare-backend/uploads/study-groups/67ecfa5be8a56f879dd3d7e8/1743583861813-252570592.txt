@@ -1,0 +1,183 @@
+Data Parallelism: Definition: A parallel computing approach where the same operation is performed simultaneously on different portions of data.
+
+Real-life examples:
+Olympic Games: Multiple runners competing in different lanes simultaneously, each performing the same action (running) on different tracks.
+Bank Transactions: Multiple tellers processing similar types of transactions (deposits/withdrawals) simultaneously for different customers.
+
+-------------------------------------------------------xxx--------------------------------------------------------
+
+Control Parallelism :
+Control parallelism is a type of parallel computing where multiple tasks or processes execute different instructions simultaneously. Unlike data parallelism, where the same operation is applied to different pieces of data, control parallelism focuses on executing different parts of a program concurrently.
+
+Real-life examples:
+Food Festival Booth: Different workers handling specific tasks simultaneously - one person taking orders, another cooking, another serving.
+
+-------------------------------------------------------xxx--------------------------------------------------------
+
+It help to evaluate and predict the performance of parallel systems
+There are 2 distinct classes of performance metrics:
+Performance metrics for processors/cores - Assess the performance of a processing unit, normally done by measuring the speed or the number of operations that it does in a certain period of time
+
+Performance metrics for parallel applications Assess the performance of a parallel application, normally done by comparing the execution time with multiple processing units against the execution time with just one processing.
+
+Some of the best known metrics are:
+MIPS - Millions of Instructions Per Second
+MFLOPS - Millions of FLoating point Operations Per Second
+SPECint - SPEC(Standard Performance Evaluation Corporation ) benchmarks that evaluate processor performance on integer arithmetic (first release in 1 992)
+SPECfp— SPEC benchmarks that evaluate processor performance on floating point operations (first release in 1 989)
+
+                               **parallel run time**
+The parallel run time of a program is the time required to run the program on n-processor computer. It is denoted by T(n) denotes the runtime of single processor, and
+When n=l, T(1)
+When n=10, T(10) denotes the runtime of 10 no. of parallel processor.
+
+                                  **SPEEDUP**
+Speedup is the ratio of the runtime needed by the single processor to the parallel runtime.
+                                        or
+Speedup is the ratio of the sequential execution time to the parallel execution time.
+                                        or
+Speedup is the ratio of the time it takes to execute a program in single processor to the time it takes to execute in n-processors. It is denoted by S(n), where
+S(n) = T (l )/T(n)
+T (l ) is the execution time with one processing unit
+T(n) is the execution time with n-processing units
+n (number of processors)
+
+                                 **Efficiency**
+(Measures how well processors are utilized) The efficiency of a program on n-processor is defined as the ratio of speedup achieved to the number of processor needed to achieve it. Efficiency measures the fraction of time for which a processor is usefully utilized. Higher efficiency indicates better resource utilization.
+It is denoted by E(n)
+E(n) = S(n)/n = T(1)/n*T(n)
+Where S(n) is the speedup for n-processing units
+
+                               **Utilization**
+Fraction of time processors spend doing useful work
+Formula: Utilization = (Time spent on useful work) / (Total time)
+Affected by load balancing and overhead
+
+                          **Communication Overheads**
+Extra time spent on inter-processor communication
+Types:
+-Latency: Time to initiate communication
+-Bandwidth limitations
+-Synchronization delays
+Impact increases with number of processors.
+
+
+                          **Single Program Performance**
+Measures how well a single application performs
+Metrics:
+-Execution time
+-Throughput
+-Resource usage
+
+                          **Multiple Program Performance**
+Evaluates system performance with multiple concurrent programs
+Considers:
+-Resource sharing
+-Scheduling
+-Inter-program interference
+
+                               **Amdahl's Law**
+The speedup of a program Using multiple processors in parallel computing is limited by the time needed for the serial fraction of the problem.
+If a problem size is fixed and it has a serial component f, the maximum speedup of the program is with n processors is given by, 
+Maximum Speedup   S(n) <= 1/f+((1-f)/n)
+
+-------------------------------------------------------xxx--------------------------------------------------------
+
+                 **Parallel Processors: Processor Organization**
+Parallel processors are organized to execute multiple instructions simultaneously by interconnecting multiple processing elements. These interconnections can be categorized as Static and Dynamic.
+
+1.Static Interconnection Networks
+In static interconnections, processors are connected using direct links, meaning their communication paths are fixed. These are primarily used in Multiprocessor Systems.
+
+Types of Static Interconnection Networks
+*Linear Array
+- Processors are connected in a sequential manner.
+- Simple but inefficient for large-scale systems.
+Example: Pipeline architectures.
+
+*Ring Topology
+- Each processor is connected to exactly two neighbors, forming a ring.
+- Efficient for distributed workloads but has high latency for distant nodes.
+
+*Mesh Network (2D or 3D)
+- Processors are arranged in a grid-like structure.
+- Efficient for large-scale parallel processing.
+Example: Used in scientific computing.
+
+*Hypercube
+-Processors are connected in a binary cube structure (e.g., 8 processors in a 3D cube).
+- Provides fast data access but complex routing.
+
+*Tree Interconnection
+- Hierarchical structure where processors are connected like a tree.
+- Efficient for searching and hierarchical processing.
+
+Advantages of Static Interconnections
+- Simple and low-cost implementation.
+- No need for switching mechanisms.
+- Reliable and predictable communication.
+
+Disadvantages
+- Limited scalability.
+- Fixed topology may not efficiently handle all tasks.
+
+
+2. Dynamic Interconnection Networks Dynamic interconnections use switching elements to establish temporary communication paths between processors. These are mainly used in Multicomputer Systems.
+
+Types of Dynamic Interconnection Networks
+*Crossbar Switch
+-Provides direct connections between any pair of processors and memory units.
+- High performance but expensive due to the large number of switches.
+
+*Multistage Interconnection Networks (MINs)
+- Uses multiple switching stages to route data dynamically.
+Example: Omega, Banyan, and Butterfly networks.
+
+*Bus-Based Networks
+- All processors share a common communication bus.
+- Simple and cost-effective but leads to contention in high-traffic scenarios.
+
+*Clos Network
+- A multi-stage network with multiple paths between processors.
+- Balances cost and performance.
+
+Advantages of Dynamic Interconnections
+- More flexible and scalable.
+- Efficient for large, distributed systems.
+- Can dynamically adapt to workload changes.
+
+Disadvantages
+- More complex design.
+- Higher latency due to switching overhead.
+
+
+-------------------------------------------------------xxx--------------------------------------------------------
+
+
+Taxonomy of Multiprocessor Systems:
+a) Shared Memory Multiprocessors:
+All processors share a common physical address space.
+Two main types:
+- UMA (Uniform Memory Access): All processors have equal access time to memory
+- NUMA (Non-Uniform Memory Access): Memory access time varies depending on memory location relative to processor
+
+b) Distributed Memory Systems:
+- Each processor has its own private memory 
+- Communication occurs through message passing over interconnection network.
+- More scalable than shared memory systems but more complex to program.
+
+2.Topology Types:
+a) Shared Memory Interconnections:
+- Bus-based: Simple but limited scalability
+- Crossbar switches: Direct connection between processors and memory
+- Fully connected: Each node directly connected to every other node
+
+b) Distributed Network Topologies:
+*Distributed switched networks:
+- Each network switch connects to one or more end node devices
+- Provides scalable communication paths 4
+*Common configurations:
+- Mesh
+- Hypercube
+- Ring
+- Tree structures

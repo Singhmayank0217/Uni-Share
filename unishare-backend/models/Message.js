@@ -31,11 +31,11 @@ const messageSchema = new mongoose.Schema({
   createdAt: {
     type: Date,
     default: Date.now,
-    expires: 86400, // 24 hours in seconds - TTL index for automatic deletion
   },
 })
 
 // Create TTL index for automatic deletion after 24 hours
+// This only applies to the messages, not the study groups
 messageSchema.index({ createdAt: 1 }, { expireAfterSeconds: 86400 })
 
 const Message = mongoose.model("Message", messageSchema)

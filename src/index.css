@@ -24,6 +24,21 @@ code {
   color: #f9fafb;
 }
 
+/* Fix for auth pages to prevent footer overlap */
+.auth-container {
+  position: relative;
+  z-index: 50;
+  margin-bottom: 6rem;
+  margin-top: 2rem;
+  background-color: transparent;
+}
+
+/* Make sure the footer stays below the auth container */
+footer {
+  position: relative;
+  z-index: 10;
+}
+
 /* Custom scrollbar */
 ::-webkit-scrollbar {
   width: 8px;
@@ -58,12 +73,12 @@ code {
 
 /* Gradient text */
 .gradient-text {
-  @apply bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent;
+  @apply bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent;
 }
 
 /* Gradient buttons */
 .gradient-btn {
-  @apply bg-gradient-to-r from-blue-600 to-purple-600 text-white hover:opacity-90 transition-all shadow-md;
+  @apply bg-gradient-to-r from-emerald-600 to-teal-600 text-white hover:opacity-90 transition-all shadow-md;
 }
 
 /* Card hover effects */
@@ -75,5 +90,114 @@ code {
 .bg-pattern {
   background-image: radial-gradient(rgba(255, 255, 255, 0.1) 1px, transparent 1px);
   background-size: 20px 20px;
+}
+
+/* Dark theme improvements */
+.dark .bg-gray-800 {
+  background-color: #1a202c;
+}
+
+.dark .bg-gray-900 {
+  background-color: #111827;
+}
+
+.dark .text-gray-300 {
+  color: #d1d5db;
+}
+
+.dark .text-gray-400 {
+  color: #9ca3af;
+}
+
+.dark .border-gray-700 {
+  border-color: #374151;
+}
+
+.dark .border-gray-600 {
+  border-color: #4b5563;
+}
+
+/* Animation classes */
+@keyframes float {
+  0%,
+  100% {
+    transform: translateY(0);
+  }
+  50% {
+    transform: translateY(-20px);
+  }
+}
+
+@keyframes pulse-slow {
+  0%,
+  100% {
+    opacity: 1;
+  }
+  50% {
+    opacity: 0.5;
+  }
+}
+
+.animate-float {
+  animation: float 6s ease-in-out infinite;
+}
+
+.animate-float-slow {
+  animation: float 8s ease-in-out infinite;
+}
+
+.animate-float-delay {
+  animation: float 7s ease-in-out 2s infinite;
+}
+
+.animate-bounce-slow {
+  animation: bounce 3s infinite;
+}
+
+.animate-pulse-slow {
+  animation: pulse-slow 3s cubic-bezier(0.4, 0, 0.6, 1) infinite;
+}
+
+/* Blob animation */
+@keyframes blob {
+  0% {
+    transform: translate(0px, 0px) scale(1);
+  }
+  33% {
+    transform: translate(30px, -50px) scale(1.1);
+  }
+  66% {
+    transform: translate(-20px, 20px) scale(0.9);
+  }
+  100% {
+    transform: translate(0px, 0px) scale(1);
+  }
+}
+
+.animate-blob {
+  animation: blob 7s infinite;
+}
+
+.animation-delay-2000 {
+  animation-delay: 2s;
+}
+
+.animation-delay-4000 {
+  animation-delay: 4s;
+}
+
+/* Form input focus effects */
+.form-input-focus {
+  @apply transition-all duration-200 border-gray-300 focus:ring-2 focus:ring-emerald-500 focus:border-emerald-500;
+}
+
+/* Button hover effects */
+.btn-hover {
+  @apply transition-all duration-200 transform hover:scale-105 active:scale-95;
+}
+
+/* Dark mode mix-blend adjustments */
+.dark .mix-blend-multiply {
+  mix-blend-mode: screen;
 }
 

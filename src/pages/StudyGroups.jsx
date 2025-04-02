@@ -320,24 +320,35 @@ const StudyGroups = () => {
       setDownloadingFile(fileName)
 
       // Get the file from the server
-      const response = await fetch(fileUrl)
+      const response = await api.get(fileUrl, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
 
-      if (!response.ok) {
+      if (!response.status === 200) {
         throw new Error(`HTTP error! status: ${response.status}`)
       }
 
-      const blob = await response.blob()
+      // Create a blob URL for the file
+      const blob = new Blob([response.data], {
+        type: response.headers["content-type"] || "application/octet-stream",
+      })
+
       const url = window.URL.createObjectURL(blob)
 
+      // Create a temporary link and trigger download
       const link = document.createElement("a")
       link.href = url
-      link.setAttribute("download", fileName || "file")
+      link.setAttribute("download", fileName || "download")
       document.body.appendChild(link)
       link.click()
 
       // Clean up
       document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
+
       toast.success(`Downloaded ${fileName}`)
     } catch (error) {
       console.error("Error downloading file:", error)

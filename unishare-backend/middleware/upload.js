@@ -33,12 +33,14 @@ const storage = multer.diskStorage({
     }
   },
   filename: (req, file, cb) => {
+    // Generate a unique filename while preserving the original extension
     const uniqueSuffix = Date.now() + "-" + Math.round(Math.random() * 1e9)
-    cb(null, uniqueSuffix + path.extname(file.originalname))
+    const ext = path.extname(file.originalname)
+    cb(null, uniqueSuffix + ext)
   },
 })
 
-// File filter
+// File filter to accept all file types
 const fileFilter = (req, file, cb) => {
   // Accept all file types for now
   cb(null, true)

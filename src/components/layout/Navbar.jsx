@@ -32,10 +32,10 @@ const Navbar = () => {
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="text-2xl font-bold flex items-center">
-            <span className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-blue-800 to-purple-900 dark:text-white mr-1">
+            <span className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 dark:from-emerald-400 dark:to-teal-400 ">
               Uni
             </span>
-            <span className=" bg-gradient-to-r from-blue-800 to-purple-900 dark:text-white text-transparent bg-clip-text">Share</span>
+            <span className=" bg-gradient-to-r text-white dark:from-emerald-400 dark:to-teal-400 text-transparent bg-clip-text">Share</span>
           </Link>
 
           {/* Desktop Navigation */}

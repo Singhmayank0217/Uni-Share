@@ -46,6 +46,7 @@ export const downloadFile = async (req, res) => {
       return res.status(403).json({ message: "You must be a member to access files" })
     }
 
+    // Construct the file path
     const filePath = path.join(__dirname, "..", "uploads", "study-groups", groupId, filename)
 
     // Check if file exists
@@ -56,16 +57,18 @@ export const downloadFile = async (req, res) => {
     // Get file stats
     const stats = fs.statSync(filePath)
 
-    // Determine content type
+    // Determine content type based on file extension
     const contentType = mime.lookup(filePath) || "application/octet-stream"
 
-    // Set headers
+    // Set appropriate headers for download
     res.setHeader("Content-Type", contentType)
     res.setHeader("Content-Length", stats.size)
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(path.basename(filePath))}"`)
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(path.basename(filename))}"`)
 
-    // Stream the file
+    // Stream the file directly to the response
     const fileStream = fs.createReadStream(filePath)
+
+    // Handle stream errors
     fileStream.on("error", (error) => {
       console.error("Error streaming file:", error)
       if (!res.headersSent) {
@@ -73,6 +76,7 @@ export const downloadFile = async (req, res) => {
       }
     })
 
+    // Pipe the file to the response
     fileStream.pipe(res)
   } catch (error) {
     console.error("Download file error:", error)

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link } from "react-router-dom"
+import { Link, useLocation } from "react-router-dom"
 import api from "../services/api"
 import ResourceCard from "../components/resources/ResourceCard"
 import FilterBar from "../components/resources/FilterBar"
@@ -25,6 +25,7 @@ import {
 
 const Home = () => {
   const { currentUser } = useAuth()
+  const location = useLocation()
   const [resources, setResources] = useState([])
   const [trendingResources, setTrendingResources] = useState([])
   const [recentResources, setRecentResources] = useState([])
@@ -45,6 +46,16 @@ const Home = () => {
     totalDownloads: 0,
     totalGroups: 0,
   })
+
+  // Parse query parameters on component mount and when URL changes
+  useEffect(() => {
+    const searchParams = new URLSearchParams(location.search)
+    const categoryParam = searchParams.get("category")
+
+    if (categoryParam) {
+      setFilters((prev) => ({ ...prev, category: categoryParam }))
+    }
+  }, [location.search])
 
   useEffect(() => {
     fetchResources()
@@ -99,6 +110,15 @@ const Home = () => {
 
   const handleFilterChange = (newFilters) => {
     setFilters({ ...filters, ...newFilters })
+  }
+
+  // Function to handle category click
+  const handleCategoryClick = (category) => {
+    setFilters((prev) => ({ ...prev, category }))
+    // Update URL without reloading the page
+    const url = new URL(window.location)
+    url.searchParams.set("category", category)
+    window.history.pushState({}, "", url)
   }
 
   return (
@@ -274,49 +294,49 @@ const Home = () => {
         <h2 className="text-2xl font-bold mb-6 text-gray-800 dark:text-white">Explore Resources</h2>
 
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
-          <Link
-            to="/?category=notes"
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center"
+          <button
+            onClick={() => handleCategoryClick("notes")}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "notes" ? "ring-2 ring-blue-500" : ""}`}
           >
             <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-full text-blue-600 dark:text-blue-400 mb-4">
               <FiBookOpen className="w-8 h-8" />
             </div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-1">Notes</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">Class notes & summaries</p>
-          </Link>
+          </button>
 
-          <Link
-            to="/?category=past-papers"
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center"
+          <button
+            onClick={() => handleCategoryClick("past-papers")}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "past-papers" ? "ring-2 ring-purple-500" : ""}`}
           >
             <div className="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-full text-purple-600 dark:text-purple-400 mb-4">
               <FiFileText className="w-8 h-8" />
             </div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-1">Past Papers</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">Previous exam papers</p>
-          </Link>
+          </button>
 
-          <Link
-            to="/?category=assignments"
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center"
+          <button
+            onClick={() => handleCategoryClick("assignments")}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "assignments" ? "ring-2 ring-amber-500" : ""}`}
           >
             <div className="bg-amber-100 dark:bg-amber-900/30 p-4 rounded-full text-amber-600 dark:text-amber-400 mb-4">
               <FiBook className="w-8 h-8" />
             </div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-1">Assignments</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">Assignment solutions</p>
-          </Link>
+          </button>
 
-          <Link
-            to="/?category=presentations"
-            className="bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center"
+          <button
+            onClick={() => handleCategoryClick("presentations")}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "presentations" ? "ring-2 ring-emerald-500" : ""}`}
           >
             <div className="bg-emerald-100 dark:bg-emerald-900/30 p-4 rounded-full text-emerald-600 dark:text-emerald-400 mb-4">
               <FiFileText className="w-8 h-8" />
             </div>
             <h3 className="font-medium text-gray-900 dark:text-white mb-1">Presentations</h3>
             <p className="text-sm text-gray-500 dark:text-gray-400">Slides & presentations</p>
-          </Link>
+          </button>
         </div>
       </section>
 

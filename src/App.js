@@ -23,7 +23,7 @@ function App() {
         <AuthProvider>
           <div className="flex flex-col min-h-screen dark:bg-gray-900 dark:text-white">
             <Navbar />
-            <main className="flex-grow container mx-auto px-4 py-8">
+            <main className="flex-grow container mx-auto px-4 py-8 relative">
               <Routes>
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
