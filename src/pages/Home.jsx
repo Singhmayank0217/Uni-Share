@@ -146,13 +146,13 @@ const Home = () => {
                 <>
                   <Link
                     to="/register"
-                    className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2"
+                    className="bg-white text-emerald-600 px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2"
                   >
                     Join Now <FiArrowRight />
                   </Link>
                   <Link
                     to="/login"
-                    className="bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-800 transition-colors shadow-lg"
+                    className="bg-emerald-700 text-white px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-800 transition-colors shadow-lg"
                   >
                     Login
                   </Link>
@@ -161,13 +161,13 @@ const Home = () => {
                 <>
                   <Link
                     to="/upload"
-                    className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2"
+                    className="bg-white text-emerald-600 px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2 "
                   >
                     Share a Resource <FiArrowRight />
                   </Link>
                   <Link
                     to="/study-groups"
-                    className="bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-800 transition-colors shadow-lg flex items-center gap-2"
+                    className="bg-emerald-700 text-white px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-800 transition-colors shadow-lg flex items-center gap-2"
                   >
                     Join Study Groups <FiUsers />
                   </Link>

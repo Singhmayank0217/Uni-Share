@@ -1,6 +1,6 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useRef, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
 import ThemeToggle from "./ThemeToggle"
@@ -15,87 +15,124 @@ import {
   FiUserPlus,
   FiUser,
   FiLogOut,
+  FiChevronDown,
 } from "react-icons/fi"
 
 const Navbar = () => {
   const { currentUser, logout } = useAuth()
   const navigate = useNavigate()
   const [isMenuOpen, setIsMenuOpen] = useState(false)
+  const [isDropdownOpen, setIsDropdownOpen] = useState(false)
+  const dropdownRef = useRef(null)
+  const dropdownButtonRef = useRef(null)
 
   const handleLogout = () => {
     logout()
     navigate("/login")
   }
 
+  // Close dropdown when clicking outside
+  useEffect(() => {
+    const handleClickOutside = (event) => {
+      if (
+        dropdownRef.current &&
+        !dropdownRef.current.contains(event.target) &&
+        dropdownButtonRef.current &&
+        !dropdownButtonRef.current.contains(event.target)
+      ) {
+        setIsDropdownOpen(false)
+      }
+    }
+
+    document.addEventListener("mousedown", handleClickOutside)
+    return () => {
+      document.removeEventListener("mousedown", handleClickOutside)
+    }
+  }, [])
+
   return (
-    <nav className="bg-gradient-to-r from-cyan-500 to-sky-800 dark:from-gray-800 dark:to-gray-900 text-white shadow-md">
+    <nav className="bg-gradient-to-r from-cyan-500 to-sky-800 dark:from-gray-800 dark:to-gray-900 text-white  shadow-md">
       <div className="container mx-auto px-4">
         <div className="flex justify-between items-center py-4">
           <Link to="/" className="text-2xl font-bold flex items-center">
             <span className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-emerald-400 to-teal-400 dark:from-emerald-400 dark:to-teal-400 ">
               Uni
             </span>
-            <span className=" bg-gradient-to-r text-white dark:from-emerald-400 dark:to-teal-400 text-transparent bg-clip-text">Share</span>
+            <span className="bg-gradient-to-r text-white dark:from-emerald-400 dark:to-teal-400 text-transparent bg-clip-text">Share</span>
           </Link>
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="hover:text-blue-200 flex items-center gap-1">
+            <Link to="/" className="hover:text-teal-400 flex items-center gap-1">
               <FiHome /> Home
             </Link>
-            <Link to="/leaderboard" className="hover:text-blue-200 flex items-center gap-1">
+            <Link to="/leaderboard" className="hover:text-teal-400 flex items-center gap-1">
               <FiAward /> Leaderboard
             </Link>
 
             {currentUser ? (
               <>
-                <Link to="/dashboard" className="hover:text-blue-200 flex items-center gap-1">
+                <Link to="/dashboard" className="hover:text-teal-400 flex items-center gap-1">
                   <FiGrid /> Dashboard
                 </Link>
-                <Link to="/upload" className="hover:text-blue-200 flex items-center gap-1">
+                <Link to="/upload" className="hover:text-teal-400 flex items-center gap-1">
                   <FiUpload /> Upload
                 </Link>
-                <Link to="/bookmarks" className="hover:text-blue-200 flex items-center gap-1">
+                <Link to="/bookmarks" className="hover:text-teal-400 flex items-center gap-1">
                   <FiBookmark /> Bookmarks
                 </Link>
-                <Link to="/study-groups" className="hover:text-blue-200 flex items-center gap-1">
+                <Link to="/study-groups" className="hover:text-teal-400 flex items-center gap-1">
                   <FiUsers /> Study Groups
                 </Link>
                 <ThemeToggle />
-                <div className="relative group">
-                  <button className="flex items-center hover:text-blue-200">
+                <div className="relative">
+                  <button
+                    ref={dropdownButtonRef}
+                    onClick={() => setIsDropdownOpen(!isDropdownOpen)}
+                    className="flex items-center hover:text-teal-400 focus:outline-none"
+                    aria-expanded={isDropdownOpen}
+                    aria-haspopup="true"
+                  >
                     <span className="mr-1">{currentUser.name}</span>
-                    <svg className="w-4 h-4 fill-current" viewBox="0 0 20 20">
-                      <path d="M5.293 7.293a1 1 0 011.414 0L10 10.586l3.293-3.293a1 1 0 111.414 1.414l-4 4a1 1 0 01-1.414 0l-4-4a1 1 0 010-1.414z" />
-                    </svg>
+                    <FiChevronDown className={`w-4 h-4 transition-transform ${isDropdownOpen ? "rotate-180" : ""}`} />
                   </button>
-                  <div className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10 hidden group-hover:block">
-                    <Link
-                      to="/profile"
-                      className=" px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
+
+                  {isDropdownOpen && (
+                    <div
+                      ref={dropdownRef}
+                      className="absolute right-0 mt-2 w-48 bg-white dark:bg-gray-800 rounded-md shadow-lg py-1 z-10"
                     >
-                      <FiUser /> Profile
-                    </Link>
-                    <button
-                      onClick={handleLogout}
-                      className=" w-full text-left px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
-                    >
-                      <FiLogOut /> Logout
-                    </button>
-                  </div>
+                      <Link
+                        to="/profile"
+                        className=" px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
+                        onClick={() => setIsDropdownOpen(false)}
+                      >
+                        <FiUser /> Profile
+                      </Link>
+                      <button
+                        onClick={() => {
+                          setIsDropdownOpen(false)
+                          handleLogout()
+                        }}
+                        className=" w-full text-left px-4 py-2 text-gray-800 dark:text-white hover:bg-gradient-to-r hover:from-blue-500 hover:to-purple-500 hover:text-white flex items-center gap-2"
+                      >
+                        <FiLogOut /> Logout
+                      </button>
+                    </div>
+                  )}
                 </div>
               </>
             ) : (
               <>
-                <Link to="/login" className="hover:text-blue-200 flex items-center gap-1">
+                <Link to="/login" className="hover:text-teal-400 flex items-center gap-1">
                   <FiLogIn /> Login
                 </Link>
                 <Link
                   to="/register"
-                  className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-md font-semibold hover:bg-blue-100 border border-white flex items-center gap-1"
+                  className="bg-white text-transparent bg-clip-text bg-gradient-to-r from-blue-600 to-purple-600 px-4 py-2 rounded-md font-semibold hover:text-teal-400 border border-white flex items-center gap-1"
                 >
-                  <FiUserPlus className="text-white dark:text-white" />{" "}
-                  <span className="text-white dark:text-white bg-clip-text text-transparent">
+                  <FiUserPlus className="text-white mr-1" />{" "}
+                  <span className="bg-gradient-to-r from-emerald-400 to-teal-400 bg-clip-text text-transparent">
                     Sign Up
                   </span>
                 </Link>
@@ -128,43 +165,43 @@ const Navbar = () => {
         {/* Mobile Navigation */}
         {isMenuOpen && (
           <div className="md:hidden pb-4">
-            <Link to="/" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+            <Link to="/" className=" py-2 hover:text-teal-400 flex items-center gap-2">
               <FiHome /> Home
             </Link>
-            <Link to="/leaderboard" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+            <Link to="/leaderboard" className=" py-2 hover:text-teal-400 flex items-center gap-2">
               <FiAward /> Leaderboard
             </Link>
 
             {currentUser ? (
               <>
-                <Link to="/dashboard" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/dashboard" className=" py-2 hover:text-teal-400flex items-center gap-2">
                   <FiGrid /> Dashboard
                 </Link>
-                <Link to="/upload" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/upload" className=" py-2 hover:text-teal-400 flex items-center gap-2">
                   <FiUpload /> Upload
                 </Link>
-                <Link to="/bookmarks" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/bookmarks" className=" py-2 hover:text-teal-400 flex items-center gap-2">
                   <FiBookmark /> Bookmarks
                 </Link>
-                <Link to="/study-groups" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/study-groups" className=" py-2 hover:text-teal-400 flex items-center gap-2">
                   <FiUsers /> Study Groups
                 </Link>
-                <Link to="/profile" className="py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/profile" className=" py-2 hover:text-teal-400 flex items-center gap-2">
                   <FiUser /> Profile
                 </Link>
                 <button
                   onClick={handleLogout}
-                  className=" py-2 hover:text-blue-200 w-full text-left flex items-center gap-2"
+                  className=" py-2 hover:text-teal-400 w-full text-left flex items-center gap-2"
                 >
                   <FiLogOut /> Logout
                 </button>
               </>
             ) : (
               <>
-                <Link to="/login" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/login" className=" py-2 hover:text-teal-400 flex items-center gap-2">
                   <FiLogIn /> Login
                 </Link>
-                <Link to="/register" className=" py-2 hover:text-blue-200 flex items-center gap-2">
+                <Link to="/register" className=" py-2 hover:text-teal-400 flex items-center gap-2">
                   <FiUserPlus /> Sign Up
                 </Link>
               </>

@@ -4,7 +4,9 @@ import { useState } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { motion } from "framer-motion"
-import { FiLock, FiMail, FiLogIn, FiArrowRight } from "react-icons/fi"
+import { FiLock, FiMail, FiLogIn, FiArrowRight, FiAlertCircle } from "react-icons/fi"
+import ForgotPasswordModal from "../components/auth/ForgotPasswordModal"
+import { toast } from "react-hot-toast"
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -14,7 +16,8 @@ const Login = () => {
   const [error, setError] = useState("")
   const [loading, setLoading] = useState(false)
   const [showPassword, setShowPassword] = useState(false)
-  const { login } = useAuth()
+  const [showForgotPassword, setShowForgotPassword] = useState(false)
+  const { login, githubLogin, googleLogin } = useAuth()
   const navigate = useNavigate()
 
   const handleChange = (e) => {
@@ -36,9 +39,56 @@ const Login = () => {
       navigate("/dashboard")
     } catch (err) {
       console.error("Login error:", err)
-      setError(err.response?.data?.message || "Failed to log in")
+      const errorMessage = err.response?.data?.message || "Failed to log in"
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
+    }
+  }
+
+  const handleGithubLogin = () => {
+    // GitHub OAuth configuration
+    const GITHUB_CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID || "your-github-client-id"
+    const REDIRECT_URI = `${window.location.origin}/auth/github/callback`
+    const githubUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user:email`
+
+    window.location.href = githubUrl
+  }
+
+  const handleGoogleLogin = async () => {
+    try {
+      // Load Google Auth API
+      if (!window.google) {
+        setError("Google authentication is not available")
+        return
+      }
+
+      const client = window.google.accounts.oauth2.initTokenClient({
+        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || "your-google-client-id",
+        scope: "profile email",
+        callback: async (response) => {
+          if (response.error) {
+            setError(response.error)
+            return
+          }
+
+          try {
+            setLoading(true)
+            await googleLogin(response.access_token)
+            navigate("/dashboard")
+          } catch (err) {
+            setError(err.response?.data?.message || "Google login failed")
+          } finally {
+            setLoading(false)
+          }
+        },
+      })
+
+      client.requestAccessToken()
+    } catch (error) {
+      console.error("Google login error:", error)
+      setError("Failed to initialize Google login")
     }
   }
 
@@ -81,11 +131,12 @@ const Login = () => {
 
             {error && (
               <motion.div
-                className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-4 rounded-lg text-sm"
+                className="bg-red-100 dark:bg-red-900/30 text-red-700 dark:text-red-400 p-4 rounded-lg text-sm flex items-center"
                 initial={{ opacity: 0, y: -10 }}
                 animate={{ opacity: 1, y: 0 }}
                 transition={{ duration: 0.3 }}
               >
+                <FiAlertCircle className="mr-2 flex-shrink-0" />
                 {error}
               </motion.div>
             )}
@@ -186,12 +237,13 @@ const Login = () => {
                 </div>
 
                 <div className="text-sm">
-                  <a
-                    href="#"
+                  <button
+                    type="button"
+                    onClick={() => setShowForgotPassword(true)}
                     className="font-medium text-emerald-600 hover:text-emerald-500 dark:text-emerald-400 dark:hover:text-emerald-300"
                   >
                     Forgot your password?
-                  </a>
+                  </button>
                 </div>
               </div>
 
@@ -251,9 +303,10 @@ const Login = () => {
                 </div>
               </div>
 
-              <div className="mt-6 grid grid-cols-3 gap-3">
+              <div className="mt-6 grid grid-cols-2 gap-3">
                 <button
                   type="button"
+                  onClick={handleGithubLogin}
                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                 >
                   <svg className="h-5 w-5" fill="currentColor" viewBox="0 0 20 20" aria-hidden="true">
@@ -263,24 +316,18 @@ const Login = () => {
                       clipRule="evenodd"
                     />
                   </svg>
+                  <span className="ml-2">GitHub</span>
                 </button>
 
                 <button
                   type="button"
-                  className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
-                >
-                  <svg className="h-5 w-5 text-[#1DA1F2] dark:text-[#1DA1F2]" fill="currentColor" viewBox="0 0 24 24">
-                    <path d="M23.953 4.57a10 10 0 01-2.825.775 4.958 4.958 0 002.163-2.723c-.951.555-2.005.959-3.127 1.184a4.92 4.92 0 00-8.384 4.482C7.69 8.095 4.067 6.13 1.64 3.162a4.822 4.822 0 00-.666 2.475c0 1.71.87 3.213 2.188 4.096a4.904 4.904 0 01-2.228-.616v.06a4.923 4.923 0 003.946 4.827 4.996 4.996 0 01-2.212.085 4.936 4.936 0 004.604 3.417 9.867 9.867 0 01-6.102 2.105c-.39 0-.779-.023-1.17-.067a13.995 13.995 0 007.557 2.209c9.053 0 13.998-7.496 13.998-13.985 0-.21 0-.42-.015-.63A9.935 9.935 0 0024 4.59z" />
-                  </svg>
-                </button>
-
-                <button
-                  type="button"
+                  onClick={handleGoogleLogin}
                   className="w-full inline-flex justify-center py-2 px-4 border border-gray-300 dark:border-gray-600 rounded-md shadow-sm bg-white dark:bg-gray-800 text-sm font-medium text-gray-700 dark:text-gray-200 hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors duration-200"
                 >
                   <svg className="h-5 w-5 text-[#4285F4] dark:text-[#4285F4]" fill="currentColor" viewBox="0 0 24 24">
                     <path d="M12.48 10.92v3.28h7.84c-.24 1.84-.853 3.187-1.787 4.133-1.147 1.147-2.933 2.4-6.053 2.4-4.827 0-8.6-3.893-8.6-8.72s3.773-8.72 8.6-8.72c2.6 0 4.507 1.027 5.907 2.347l2.307-2.307C18.747 1.44 16.133 0 12.48 0 5.867 0 .307 5.387.307 12s5.56 12 12.173 12c3.573 0 6.267-1.173 8.373-3.36 2.16-2.16 2.84-5.213 2.84-7.667 0-.76-.053-1.467-.173-2.053H12.48z" />
                   </svg>
+                  <span className="ml-2">Google</span>
                 </button>
               </div>
             </motion.div>
@@ -299,6 +346,9 @@ const Login = () => {
           </motion.div>
         </div>
       </div>
+
+      {/* Forgot Password Modal */}
+      {showForgotPassword && <ForgotPasswordModal onClose={() => setShowForgotPassword(false)} />}
     </div>
   )
 }

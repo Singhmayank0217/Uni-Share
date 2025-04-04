@@ -139,7 +139,7 @@ const UploadResource = () => {
 
   return (
     <div className="max-w-3xl mx-auto">
-      <div className="bg-white rounded-lg shadow-md p-8">
+      <div className="bg-white rounded-[15px] shadow-md p-8">
         <h2 className="text-2xl font-bold mb-6">Upload a Resource</h2>
 
         {error && <div className="bg-red-100 text-red-700 p-4 rounded-md mb-6">{error}</div>}

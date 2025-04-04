@@ -83,7 +83,7 @@ const Leaderboard = () => {
           <p className="text-gray-600">Be the first to upload resources and appear on the leaderboard!</p>
         </div>
       ) : (
-        <div className="bg-white rounded-lg shadow-md overflow-hidden">
+        <div className="bg-white rounded-[10px] shadow-md overflow-hidden">
           <table className="min-w-full divide-y divide-gray-200">
             <thead className="bg-gray-50">
               <tr>

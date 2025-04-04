@@ -1,6 +1,7 @@
 import { BrowserRouter as Router, Routes, Route } from "react-router-dom"
 import { AuthProvider } from "./contexts/AuthContext"
 import { ThemeProvider } from "./contexts/ThemeContext"
+import { Toaster } from "react-hot-toast"
 import Navbar from "./components/layout/Navbar"
 import Footer from "./components/layout/Footer"
 import Home from "./pages/Home"
@@ -13,6 +14,8 @@ import Profile from "./pages/Profile"
 import Bookmarks from "./pages/Bookmarks"
 import StudyGroups from "./pages/StudyGroups"
 import Leaderboard from "./pages/Leaderboard"
+import ResetPassword from "./pages/ResetPassword"
+import GitHubCallback from "./components/auth/GitHubCallback"
 import PrivateRoute from "./components/auth/PrivateRoute"
 import "./App.css"
 
@@ -28,6 +31,8 @@ function App() {
                 <Route path="/" element={<Home />} />
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
+                <Route path="/reset-password/:token" element={<ResetPassword />} />
+                <Route path="/auth/github/callback" element={<GitHubCallback />} />
                 <Route path="/resources/:id" element={<ResourceDetails />} />
                 <Route
                   path="/dashboard"
@@ -74,6 +79,7 @@ function App() {
             </main>
             <Footer />
           </div>
+          <Toaster position="top-right" />
         </AuthProvider>
       </ThemeProvider>
     </Router>
