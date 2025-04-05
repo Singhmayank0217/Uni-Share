@@ -4,6 +4,7 @@ import { useEffect, useState } from "react"
 import { useNavigate, useLocation } from "react-router-dom"
 import { useAuth } from "../../contexts/AuthContext"
 import { FiGithub, FiAlertCircle } from "react-icons/fi"
+import toast from "react-hot-toast"
 
 const GitHubCallback = () => {
   const [error, setError] = useState("")
@@ -27,10 +28,13 @@ const GitHubCallback = () => {
       try {
         // Exchange the code for a token
         await githubLogin(code)
+        toast.success("Successfully signed in with GitHub!")
         navigate("/dashboard")
       } catch (err) {
         console.error("GitHub authentication error:", err)
-        setError(err.response?.data?.message || "Failed to authenticate with GitHub")
+        const errorMsg = err.response?.data?.message || "Failed to authenticate with GitHub"
+        setError(errorMsg)
+        toast.error(errorMsg)
         setLoading(false)
       }
     }
@@ -41,7 +45,7 @@ const GitHubCallback = () => {
   if (loading) {
     return (
       <div className="min-h-screen flex items-center justify-center">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8 max-w-md w-full text-center">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 max-w-md w-full text-center">
           <div className="animate-pulse mb-4 bg-gray-200 dark:bg-gray-700 rounded-full w-16 h-16 flex items-center justify-center mx-auto">
             <FiGithub className="w-8 h-8 text-gray-400 dark:text-gray-500" />
           </div>
@@ -60,7 +64,7 @@ const GitHubCallback = () => {
   if (error) {
     return (
       <div className="min-h-screen flex items-center justify-center p-4">
-        <div className="bg-white dark:bg-gray-900 rounded-lg shadow-md p-8 max-w-md w-full">
+        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-8 max-w-md w-full">
           <div className="text-center mb-6">
             <div className="bg-red-100 dark:bg-red-900/30 w-16 h-16 rounded-full flex items-center justify-center mx-auto mb-4">
               <FiAlertCircle className="w-8 h-8 text-red-600 dark:text-red-400" />
@@ -78,7 +82,7 @@ const GitHubCallback = () => {
             </button>
             <button
               onClick={() => navigate("/")}
-              className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-800 transition-colors"
+              className="w-full py-2 px-4 border border-gray-300 dark:border-gray-600 text-gray-700 dark:text-gray-300 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
             >
               Go to Home Page
             </button>

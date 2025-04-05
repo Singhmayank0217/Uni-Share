@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { Link, useLocation } from "react-router-dom"
+import { Link, useLocation, useNavigate } from "react-router-dom"
 import api from "../services/api"
 import ResourceCard from "../components/resources/ResourceCard"
 import FilterBar from "../components/resources/FilterBar"
@@ -26,6 +26,7 @@ import {
 const Home = () => {
   const { currentUser } = useAuth()
   const location = useLocation()
+  const navigate = useNavigate()
   const [resources, setResources] = useState([])
   const [trendingResources, setTrendingResources] = useState([])
   const [recentResources, setRecentResources] = useState([])
@@ -53,7 +54,8 @@ const Home = () => {
     const categoryParam = searchParams.get("category")
 
     if (categoryParam) {
-      setFilters((prev) => ({ ...prev, category: categoryParam }))
+      // Set filters state with the category param
+      setFilters((prev) => ({ ...prev, category: categoryParam.toLowerCase() }))
     }
   }, [location.search])
 
@@ -114,17 +116,21 @@ const Home = () => {
 
   // Function to handle category click
   const handleCategoryClick = (category) => {
-    setFilters((prev) => ({ ...prev, category }))
+    const lowercaseCategory = category.toLowerCase()
+
+    // Update filters state
+    setFilters((prev) => ({ ...prev, category: lowercaseCategory }))
+
     // Update URL without reloading the page
-    const url = new URL(window.location)
-    url.searchParams.set("category", category)
-    window.history.pushState({}, "", url)
+    const url = new URL(window.location.href)
+    url.searchParams.set("category", lowercaseCategory)
+    navigate(`/?category=${lowercaseCategory}`, { replace: true })
   }
 
   return (
     <div>
       {/* Hero Section */}
-      <section className="relative bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-16 px-4 rounded-2xl mb-12 overflow-hidden">
+      <section className="relative bg-gradient-to-r from-emerald-600 to-teal-600 dark:from-emerald-800 dark:to-teal-800 text-white py-16 px-4 rounded-2xl mb-12 overflow-hidden">
         <div className="absolute inset-0 opacity-10">
           {/* Using a pattern instead of placeholder image */}
           <div className="absolute inset-0 bg-pattern"></div>
@@ -146,13 +152,13 @@ const Home = () => {
                 <>
                   <Link
                     to="/register"
-                    className="bg-white text-emerald-600 px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2"
+                    className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2"
                   >
                     Join Now <FiArrowRight />
                   </Link>
                   <Link
                     to="/login"
-                    className="bg-emerald-700 text-white px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-800 transition-colors shadow-lg"
+                    className="bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-800 transition-colors shadow-lg"
                   >
                     Login
                   </Link>
@@ -161,13 +167,13 @@ const Home = () => {
                 <>
                   <Link
                     to="/upload"
-                    className="bg-white text-emerald-600 px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2 "
+                    className="bg-white text-emerald-600 px-6 py-3 rounded-lg font-semibold hover:bg-emerald-50 transition-colors shadow-lg flex items-center gap-2"
                   >
                     Share a Resource <FiArrowRight />
                   </Link>
                   <Link
                     to="/study-groups"
-                    className="bg-emerald-700 text-white px-6 py-3 rounded-[10px] font-semibold hover:bg-emerald-800 transition-colors shadow-lg flex items-center gap-2"
+                    className="bg-emerald-700 text-white px-6 py-3 rounded-lg font-semibold hover:bg-emerald-800 transition-colors shadow-lg flex items-center gap-2"
                   >
                     Join Study Groups <FiUsers />
                   </Link>
@@ -296,7 +302,9 @@ const Home = () => {
         <div className="grid grid-cols-2 md:grid-cols-4 gap-4">
           <button
             onClick={() => handleCategoryClick("notes")}
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "notes" ? "ring-2 ring-blue-500" : ""}`}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${
+              filters.category === "notes" ? "ring-2 ring-blue-500" : ""
+            }`}
           >
             <div className="bg-blue-100 dark:bg-blue-900/30 p-4 rounded-full text-blue-600 dark:text-blue-400 mb-4">
               <FiBookOpen className="w-8 h-8" />
@@ -307,7 +315,9 @@ const Home = () => {
 
           <button
             onClick={() => handleCategoryClick("past-papers")}
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "past-papers" ? "ring-2 ring-purple-500" : ""}`}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${
+              filters.category === "past-papers" ? "ring-2 ring-purple-500" : ""
+            }`}
           >
             <div className="bg-purple-100 dark:bg-purple-900/30 p-4 rounded-full text-purple-600 dark:text-purple-400 mb-4">
               <FiFileText className="w-8 h-8" />
@@ -318,7 +328,9 @@ const Home = () => {
 
           <button
             onClick={() => handleCategoryClick("assignments")}
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "assignments" ? "ring-2 ring-amber-500" : ""}`}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${
+              filters.category === "assignments" ? "ring-2 ring-amber-500" : ""
+            }`}
           >
             <div className="bg-amber-100 dark:bg-amber-900/30 p-4 rounded-full text-amber-600 dark:text-amber-400 mb-4">
               <FiBook className="w-8 h-8" />
@@ -329,7 +341,9 @@ const Home = () => {
 
           <button
             onClick={() => handleCategoryClick("presentations")}
-            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${filters.category === "presentations" ? "ring-2 ring-emerald-500" : ""}`}
+            className={`bg-white dark:bg-gray-800 rounded-xl shadow-md p-6 border border-gray-200 dark:border-gray-700 hover:shadow-lg transition-all flex flex-col items-center text-center ${
+              filters.category === "presentations" ? "ring-2 ring-emerald-500" : ""
+            }`}
           >
             <div className="bg-emerald-100 dark:bg-emerald-900/30 p-4 rounded-full text-emerald-600 dark:text-emerald-400 mb-4">
               <FiFileText className="w-8 h-8" />
@@ -356,13 +370,21 @@ const Home = () => {
             <div className="flex border border-gray-200 dark:border-gray-700 rounded-lg overflow-hidden">
               <button
                 onClick={() => setViewMode("grid")}
-                className={`p-2 ${viewMode === "grid" ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                className={`p-2 ${
+                  viewMode === "grid"
+                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
               >
                 <FiGrid />
               </button>
               <button
                 onClick={() => setViewMode("list")}
-                className={`p-2 ${viewMode === "list" ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400" : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"}`}
+                className={`p-2 ${
+                  viewMode === "list"
+                    ? "bg-emerald-100 dark:bg-emerald-900/30 text-emerald-700 dark:text-emerald-400"
+                    : "bg-white dark:bg-gray-800 text-gray-700 dark:text-gray-300"
+                }`}
               >
                 <FiList />
               </button>

@@ -5,6 +5,7 @@ import { auth } from "../middleware/auth.js"
 import User from "../models/User.js"
 import Resource from "../models/Resource.js"
 import crypto from "crypto"
+import nodemailer from "nodemailer"
 
 const router = express.Router()
 
@@ -62,7 +63,7 @@ router.put("/password", auth, async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" })
     }
 
-    // Hash new password
+    // Hash new password - Note: we don't use the save middleware here to avoid potential issues
     const salt = await bcrypt.genSalt(10)
     user.password = await bcrypt.hash(newPassword, salt)
 
@@ -115,35 +116,48 @@ router.post("/forgot-password", async (req, res) => {
     // Create reset URL
     const resetUrl = `${process.env.CLIENT_URL || "http://localhost:3000"}/reset-password/${resetToken}`
 
-    // For development purposes, just log the reset URL
-    console.log("Password reset URL:", resetUrl)
-
-    // In a real application, you would send an email here
-    // This is a mock implementation for development
-    /*
+    // Configure email transport
     const transporter = nodemailer.createTransport({
-      service: 'gmail',
+      service: process.env.EMAIL_SERVICE || "gmail",
       auth: {
         user: process.env.EMAIL_USERNAME,
-        pass: process.env.EMAIL_PASSWORD
-      }
+        pass: process.env.EMAIL_PASSWORD,
+      },
     })
 
+    // Email options
     const mailOptions = {
-      from: process.env.EMAIL_FROM || 'no-reply@unishare.com',
+      from: process.env.EMAIL_FROM || "no-reply@unishare.com",
       to: user.email,
-      subject: 'Password Reset Request',
+      subject: "Password Reset Request",
       html: `
-        <p>You requested a password reset.</p>
-        <p>Click this link to reset your password:</p>
-        <a href="${resetUrl}" target="_blank">Reset Password</a>
-        <p>This link will expire in 1 hour.</p>
-        <p>If you didn't request this, please ignore this email.</p>
-      `
+        <div style="font-family: Arial, sans-serif; max-width: 600px; margin: 0 auto; padding: 20px; border: 1px solid #e0e0e0; border-radius: 5px;">
+          <h2 style="color: #4f46e5;">Reset Your Password</h2>
+          <p>You requested a password reset for your UniShare account.</p>
+          <p>Click the button below to reset your password. This link will expire in 1 hour.</p>
+          <div style="text-align: center; margin: 30px 0;">
+            <a href="${resetUrl}" style="background-color: #4f46e5; color: white; padding: 10px 20px; text-decoration: none; border-radius: 5px; font-weight: bold;">Reset Password</a>
+          </div>
+          <p>If you didn't request this password reset, you can safely ignore this email.</p>
+          <p>If the button above doesn't work, copy and paste the following URL into your browser:</p>
+          <p style="word-break: break-all; color: #6b7280;">${resetUrl}</p>
+          <hr style="margin: 20px 0; border: none; border-top: 1px solid #e0e0e0;">
+          <p style="color: #6b7280; font-size: 14px;">The UniShare Team</p>
+        </div>
+      `,
     }
 
-    await transporter.sendMail(mailOptions)
-    */
+    // Send the email
+    try {
+      await transporter.sendMail(mailOptions)
+      console.log(`Password reset email sent to ${user.email}`)
+    } catch (emailError) {
+      console.error("Error sending email:", emailError)
+      // Even if email fails, don't inform the user for security reasons
+    }
+
+    // For development - log the reset URL to console as fallback
+    console.log("Password reset URL:", resetUrl)
 
     res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." })
   } catch (error) {
@@ -167,7 +181,7 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Password reset token is invalid or has expired" })
     }
 
-    // Hash new password
+    // Hash new password - Note: we explicitly hash it here rather than using the middleware
     const salt = await bcrypt.genSalt(10)
     user.password = await bcrypt.hash(newPassword, salt)
 

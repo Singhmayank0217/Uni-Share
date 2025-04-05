@@ -34,6 +34,7 @@ router.get("/", async (req, res) => {
       query.subject = subject
     }
 
+    // Fix: Make category search case-insensitive
     if (category) {
       query.tags = { $regex: new RegExp(category, "i") }
     }
@@ -202,7 +203,12 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
     const fileExtension = path.extname(req.files[0].originalname).toLowerCase().substring(1)
     const fileType = fileExtension
 
-    // Create resource
+    // Create resource - Ensure tags are properly normalized
+    const parsedTags = tags ? (Array.isArray(tags) ? tags : [tags]) : []
+
+    // Convert tags to lowercase for better searching/filtering
+    const normalizedTags = parsedTags.map((tag) => tag.toLowerCase())
+
     const resource = new Resource({
       title,
       description,
@@ -212,7 +218,7 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
       uploader: req.user._id,
       files,
       fileType,
-      tags: tags ? (Array.isArray(tags) ? tags : [tags]) : [],
+      tags: normalizedTags,
     })
 
     await resource.save()

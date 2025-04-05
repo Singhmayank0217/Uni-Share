@@ -76,7 +76,7 @@ router.post("/register", async (req, res) => {
     const user = new User({
       name,
       email,
-      password,
+      password, // Will be hashed in the pre-save middleware
       uid,
     })
 
