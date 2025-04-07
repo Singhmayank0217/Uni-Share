@@ -1,12 +1,14 @@
 "use client"
 
-import { useState } from "react"
+import { useState, useEffect } from "react"
 import { Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import { motion } from "framer-motion"
 import { FiLock, FiMail, FiLogIn, FiArrowRight, FiAlertCircle } from "react-icons/fi"
 import ForgotPasswordModal from "../components/auth/ForgotPasswordModal"
 import { toast } from "react-hot-toast"
+const google = window.google;
+
 
 const Login = () => {
   const [formData, setFormData] = useState({
@@ -19,6 +21,32 @@ const Login = () => {
   const [showForgotPassword, setShowForgotPassword] = useState(false)
   const { login, githubLogin, googleLogin } = useAuth()
   const navigate = useNavigate()
+  const [googleScriptLoaded, setGoogleScriptLoaded] = useState(false)
+
+  useEffect(() => {
+    // Load Google API script
+    const loadGoogleScript = () => {
+      const script = document.createElement("script")
+      script.src = "https://accounts.google.com/gsi/client"
+      script.async = true
+      script.defer = true
+      script.onload = () => setGoogleScriptLoaded(true)
+      document.body.appendChild(script)
+
+      // Declare google variable
+      window.google = window.google || {}
+    }
+
+    loadGoogleScript()
+
+    return () => {
+      // Clean up script if component unmounts
+      const script = document.querySelector('script[src="https://accounts.google.com/gsi/client"]')
+      if (script) {
+        document.body.removeChild(script)
+      }
+    }
+  }, [])
 
   const handleChange = (e) => {
     const { name, value } = e.target
@@ -49,7 +77,7 @@ const Login = () => {
 
   const handleGithubLogin = () => {
     // GitHub OAuth configuration
-    const GITHUB_CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID || "your-github-client-id"
+    const GITHUB_CLIENT_ID = process.env.REACT_APP_GITHUB_CLIENT_ID || "Ov23lihexpSyOmKd19dR"
     const REDIRECT_URI = `${window.location.origin}/auth/github/callback`
     const githubUrl = `https://github.com/login/oauth/authorize?client_id=${GITHUB_CLIENT_ID}&redirect_uri=${REDIRECT_URI}&scope=user:email`
 
@@ -58,37 +86,38 @@ const Login = () => {
 
   const handleGoogleLogin = async () => {
     try {
-      // Load Google Auth API
-      if (!window.google) {
-        setError("Google authentication is not available")
+      if (!window.google || !googleScriptLoaded) {
+        setError("Google authentication is not available. Please try again later.")
         return
       }
 
-      const client = window.google.accounts.oauth2.initTokenClient({
-        client_id: process.env.REACT_APP_GOOGLE_CLIENT_ID || "your-google-client-id",
-        scope: "profile email",
-        callback: async (response) => {
-          if (response.error) {
-            setError(response.error)
-            return
-          }
+      const GOOGLE_CLIENT_ID =
+        process.env.REACT_APP_GOOGLE_CLIENT_ID || "your-google-client-id.apps.googleusercontent.com"
 
-          try {
-            setLoading(true)
-            await googleLogin(response.access_token)
-            navigate("/dashboard")
-          } catch (err) {
-            setError(err.response?.data?.message || "Google login failed")
-          } finally {
-            setLoading(false)
+      google.accounts.id.initialize({
+        client_id: GOOGLE_CLIENT_ID,
+        callback: async (response) => {
+          if (response.credential) {
+            try {
+              setLoading(true)
+              await googleLogin(response.credential)
+              navigate("/dashboard")
+            } catch (err) {
+              console.error("Google login error:", err)
+              setError(err.response?.data?.message || "Google login failed")
+              toast.error("Google login failed")
+            } finally {
+              setLoading(false)
+            }
           }
         },
       })
 
-      client.requestAccessToken()
+      google.accounts.id.prompt()
     } catch (error) {
-      console.error("Google login error:", error)
+      console.error("Google login initialization error:", error)
       setError("Failed to initialize Google login")
+      toast.error("Failed to initialize Google login")
     }
   }
 

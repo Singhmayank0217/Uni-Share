@@ -291,5 +291,35 @@ router.post("/google", async (req, res) => {
   }
 })
 
+// Verify password
+router.post("/verify-password", async (req, res) => {
+  try {
+    const { email, password } = req.body
+
+    // Validate
+    if (!email || !password) {
+      return res.status(400).json({ message: "Please enter all fields" })
+    }
+
+    // Check for existing user
+    const user = await User.findOne({ email })
+    if (!user) {
+      return res.status(400).json({ message: "Invalid credentials" })
+    }
+
+    // Validate password
+    const isMatch = await bcrypt.compare(password, user.password)
+    if (!isMatch) {
+      return res.status(400).json({ message: "Invalid credentials" })
+    }
+
+    // Password is valid
+    res.json({ message: "Password verified" })
+  } catch (error) {
+    console.error("Verify password error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
 export default router
 

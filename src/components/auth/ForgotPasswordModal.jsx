@@ -4,6 +4,8 @@ import { useState } from "react"
 import { motion } from "framer-motion"
 import { FiMail, FiX, FiAlertCircle, FiCheckCircle } from "react-icons/fi"
 import { useAuth } from "../../contexts/AuthContext"
+import { toast } from "react-hot-toast"
+import api from "../../utils/api"
 
 const ForgotPasswordModal = ({ onClose }) => {
   const [email, setEmail] = useState("")
@@ -24,11 +26,15 @@ const ForgotPasswordModal = ({ onClose }) => {
       setLoading(true)
       setError("")
 
-      await forgotPassword(email)
-      setSuccess(true)
+      const response = await api.post("/api/users/forgot-password", { email })
+
+      setSuccess(response.data.message || "Password reset email sent. Please check your inbox.")
+      toast.success("Password reset email sent")
     } catch (err) {
-      console.error("Password reset error:", err)
-      setError("Failed to send reset email. Please try again later.")
+      console.error("Forgot password error:", err)
+      const errorMessage = err.response?.data?.message || "Failed to send password reset email"
+      setError(errorMessage)
+      toast.error(errorMessage)
     } finally {
       setLoading(false)
     }

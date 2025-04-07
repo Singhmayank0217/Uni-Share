@@ -25,6 +25,7 @@ import {
   FiRefreshCw,
 } from "react-icons/fi"
 import toast from "react-hot-toast"
+import React from "react"
 
 const StudyGroups = () => {
   const { currentUser } = useAuth()
@@ -692,6 +693,7 @@ const StudyGroups = () => {
             </button>
           </div>
 
+          {/* Message display area */}
           <div className="p-4 h-[600px] overflow-y-auto bg-gray-50 dark:bg-gray-700 flex flex-col">
             {loadingMessages ? (
               <div className="flex justify-center items-center h-full">
@@ -704,64 +706,105 @@ const StudyGroups = () => {
                 <p>Be the first to start a conversation!</p>
               </div>
             ) : (
-              <div className="space-y-4 flex-grow">
-                {messages.map((message, index) => (
-                  <div
-                    key={index}
-                    className={`flex ${message.sender._id === currentUser._id ? "justify-end" : "justify-start"}`}
-                  >
-                    <div
-                      className={`max-w-[70%] rounded-lg p-3 shadow-sm ${
-                        message.sender._id === currentUser._id
-                          ? "bg-gradient-to-r from-emerald-500 to-teal-500 text-white"
-                          : "bg-white dark:bg-gray-600 text-gray-800 dark:text-white"
-                      }`}
-                    >
-                      <div className="text-sm font-semibold mb-1 flex items-center justify-between">
-                        <span>
-                          {message.sender.name} {message.sender._id === currentUser._id && "(You)"}
-                        </span>
-                        <span className="text-xs opacity-75">
-                          {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
-                        </span>
-                      </div>
+              <div className="space-y-2 flex-grow">
+                {messages.map((message, index) => {
+                  const isCurrentUser = message.sender._id === currentUser._id
+                  const showSenderInfo = index === 0 || messages[index - 1].sender._id !== message.sender._id
+                  const messageDate = new Date(message.createdAt)
+                  const today = new Date()
+                  const yesterday = new Date(today)
+                  yesterday.setDate(yesterday.getDate() - 1)
 
-                      {message.content && <div className="mb-2">{message.content}</div>}
+                  let dateDisplay
+                  if (messageDate.toDateString() === today.toDateString()) {
+                    dateDisplay = "Today"
+                  } else if (messageDate.toDateString() === yesterday.toDateString()) {
+                    dateDisplay = "Yesterday"
+                  } else {
+                    dateDisplay = messageDate.toLocaleDateString()
+                  }
 
-                      {message.fileUrl && (
-                        <div className="mt-2 border-t pt-2 border-gray-200 dark:border-gray-500">
-                          <div className="flex items-center justify-between">
-                            <div className="flex items-center gap-2">
-                              {getFileIcon(message.fileType)}
-                              <span className="text-sm truncate max-w-[150px]">{message.fileName}</span>
-                            </div>
-                            <button
-                              onClick={() => downloadFile(message.fileUrl, message.fileName)}
-                              className={`text-xs flex items-center gap-1 bg-white bg-opacity-20 hover:bg-opacity-30 rounded px-2 py-1 ${downloadingFile === message.fileName ? "opacity-50 cursor-not-allowed" : ""}`}
-                              disabled={downloadingFile === message.fileName}
-                            >
-                              {downloadingFile === message.fileName ? (
-                                <>Downloading...</>
-                              ) : (
-                                <>
-                                  <FiDownload size={12} /> Download
-                                </>
-                              )}
-                            </button>
+                  // Check if we need to show date separator
+                  const showDateSeparator =
+                    index === 0 || new Date(messages[index - 1].createdAt).toDateString() !== messageDate.toDateString()
+
+                  return (
+                    <React.Fragment key={index}>
+                      {showDateSeparator && (
+                        <div className="flex justify-center my-4">
+                          <div className="bg-gray-200 dark:bg-gray-600 text-gray-600 dark:text-gray-300 text-xs px-3 py-1 rounded-full">
+                            {dateDisplay}
                           </div>
                         </div>
                       )}
 
-                      <div className="text-xs mt-1 opacity-75">{formatDate(message.createdAt)}</div>
-                    </div>
-                  </div>
-                ))}
+                      <div className={`flex ${isCurrentUser ? "justify-end" : "justify-start"}`}>
+                        <div
+                          className={`max-w-[70%] rounded-lg p-3 shadow-sm ${
+                            isCurrentUser
+                              ? "bg-emerald-500 text-white rounded-tr-none"
+                              : "bg-white dark:bg-gray-600 text-gray-800 dark:text-white rounded-tl-none"
+                          }`}
+                        >
+                          {!isCurrentUser && showSenderInfo && (
+                            <div className="text-xs font-semibold mb-1 text-emerald-700 dark:text-emerald-300">
+                              {message.sender.name}
+                            </div>
+                          )}
+
+                          {message.content && <div className="mb-1">{message.content}</div>}
+
+                          {message.fileUrl && (
+                            <div
+                              className={`mt-2 pt-1 ${message.content ? "border-t border-gray-200 dark:border-gray-500" : ""}`}
+                            >
+                              <div className="flex items-center justify-between">
+                                <div className="flex items-center gap-2">
+                                  {getFileIcon(message.fileType)}
+                                  <span className="text-sm truncate max-w-[150px]">{message.fileName}</span>
+                                </div>
+                                <button
+                                  onClick={() => downloadFile(message.fileUrl, message.fileName)}
+                                  className={`text-xs flex items-center gap-1 ${
+                                    isCurrentUser
+                                      ? "bg-emerald-600 hover:bg-emerald-700"
+                                      : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-300 dark:hover:bg-gray-600"
+                                  } rounded px-2 py-1 ${downloadingFile === message.fileName ? "opacity-50 cursor-not-allowed" : ""}`}
+                                  disabled={downloadingFile === message.fileName}
+                                >
+                                  {downloadingFile === message.fileName ? (
+                                    <>Downloading...</>
+                                  ) : (
+                                    <>
+                                      <FiDownload size={12} /> Download
+                                    </>
+                                  )}
+                                </button>
+                              </div>
+                            </div>
+                          )}
+
+                          <div className="text-xs mt-1 opacity-75 text-right">
+                            {new Date(message.createdAt).toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" })}
+                            {isCurrentUser && (
+                              <span className="ml-1">✓</span> // Simple checkmark for sent messages
+                            )}
+                          </div>
+                        </div>
+                      </div>
+                    </React.Fragment>
+                  )
+                })}
                 <div ref={messagesEndRef} />
               </div>
             )}
           </div>
 
-          <form onSubmit={handleSendMessage} className="p-4 border-t border-gray-200 dark:border-gray-700">
+          {/* Message input area - enhanced with emoji button and better styling */}
+          <form
+            onSubmit={handleSendMessage}
+            className="p-4 border-t border-gray-200 dark:border-gray-700 bg-white dark:bg-gray-800"
+          >
             {filePreview && (
               <div className="mb-2 p-2 bg-emerald-50 dark:bg-emerald-900/30 rounded-lg flex justify-between items-center">
                 <div className="flex items-center gap-2">
@@ -797,20 +840,11 @@ const StudyGroups = () => {
               </div>
             )}
 
-            <div className="flex">
-              <input
-                type="text"
-                value={messageInput}
-                onChange={(e) => setMessageInput(e.target.value)}
-                className="flex-grow border border-gray-300 dark:border-gray-600 rounded-l-md px-3 py-2 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
-                placeholder="Type your message..."
-                disabled={sendingMessage}
-              />
-
+            <div className="flex items-center">
               <button
                 type="button"
                 onClick={handleFileButtonClick}
-                className="bg-gray-100 dark:bg-gray-600 text-gray-700 dark:text-gray-200 px-3 hover:bg-gray-200 dark:hover:bg-gray-500"
+                className="p-3 rounded-full bg-gray-100 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-gray-200 dark:hover:bg-gray-600 mr-2"
                 disabled={sendingMessage}
                 title="Attach file"
               >
@@ -819,17 +853,24 @@ const StudyGroups = () => {
 
               <input type="file" ref={fileInputRef} onChange={handleFileSelect} className="hidden" />
 
+              <input
+                type="text"
+                value={messageInput}
+                onChange={(e) => setMessageInput(e.target.value)}
+                className="flex-grow border border-gray-300 dark:border-gray-600 rounded-full px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
+                placeholder="Type a message..."
+                disabled={sendingMessage}
+              />
+
               <button
                 type="submit"
-                className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-r-md font-semibold hover:opacity-90 disabled:opacity-50 flex items-center gap-1"
+                className="p-3 ml-2 rounded-full bg-emerald-500 text-white disabled:opacity-50 hover:bg-emerald-600"
                 disabled={sendingMessage || (!messageInput.trim() && !selectedFile)}
               >
                 {sendingMessage ? (
-                  "Sending..."
+                  <div className="h-5 w-5 animate-spin rounded-full border-2 border-t-transparent border-white"></div>
                 ) : (
-                  <>
-                    <FiSend /> Send
-                  </>
+                  <FiSend />
                 )}
               </button>
             </div>

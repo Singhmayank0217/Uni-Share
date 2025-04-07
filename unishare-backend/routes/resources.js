@@ -34,9 +34,19 @@ router.get("/", async (req, res) => {
       query.subject = subject
     }
 
-    // Fix: Make category search case-insensitive
+    // Fix: Make category search case-insensitive and handle hyphenated categories
     if (category) {
-      query.tags = { $regex: new RegExp(category, "i") }
+      // Convert hyphenated categories to regular form and handle multiple formats
+      const normalizedCategory = category.replace(/-/g, " ").toLowerCase()
+
+      // Create a more flexible regex pattern
+      query.$or = [
+        { tags: { $regex: new RegExp(normalizedCategory, "i") } },
+        { tags: { $regex: new RegExp(category, "i") } },
+        { tags: { $regex: new RegExp(category.replace(/-/g, ""), "i") } },
+      ]
+
+      console.log(`Searching for category with patterns:`, query.$or)
     }
 
     if (search) {
@@ -74,6 +84,8 @@ router.get("/", async (req, res) => {
       .populate("uploader", "name uid")
       .sort(sortOptions)
       .limit(50)
+
+    console.log(`Found ${resources.length} resources matching query:`, query)
 
     // Format resources for response
     const formattedResources = resources.map((resource) => {

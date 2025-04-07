@@ -116,15 +116,17 @@ const Home = () => {
 
   // Function to handle category click
   const handleCategoryClick = (category) => {
-    const lowercaseCategory = category.toLowerCase()
+    // Normalize the category to lowercase and replace spaces with hyphens for URL
+    const normalizedCategory = category.toLowerCase().replace(/\s+/g, "-")
 
     // Update filters state
-    setFilters((prev) => ({ ...prev, category: lowercaseCategory }))
+    setFilters((prev) => ({ ...prev, category: normalizedCategory }))
 
     // Update URL without reloading the page
-    const url = new URL(window.location.href)
-    url.searchParams.set("category", lowercaseCategory)
-    navigate(`/?category=${lowercaseCategory}`, { replace: true })
+    navigate(`/?category=${normalizedCategory}`, { replace: true })
+
+    // Fetch resources with the new category filter
+    fetchResources()
   }
 
   return (

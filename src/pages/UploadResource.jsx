@@ -18,6 +18,18 @@ import {
   FiInfo,
 } from "react-icons/fi"
 
+// Add this constant at the top of the component, after the imports
+const predefinedTags = [
+  "notes",
+  "past papers",
+  "assignments",
+  "presentations",
+  "books",
+  "solutions",
+  "lecture slides",
+  "practice questions",
+]
+
 const UploadResource = () => {
   const { currentUser } = useAuth()
   const navigate = useNavigate()
@@ -189,6 +201,16 @@ const UploadResource = () => {
       ...prevState,
       tags: prevState.tags.filter((tag) => tag !== tagToRemove),
     }))
+  }
+
+  // Add this function to handle selecting a predefined tag
+  const handlePredefinedTagSelect = (tag) => {
+    if (!formData.tags.includes(tag.toLowerCase())) {
+      setFormData((prevState) => ({
+        ...prevState,
+        tags: [...prevState.tags, tag.toLowerCase()],
+      }))
+    }
   }
 
   const handleSubmit = async (e) => {
@@ -386,6 +408,8 @@ const UploadResource = () => {
                 <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2 flex items-center">
                   <FiTag className="text-emerald-500 mr-2" /> Tags
                 </label>
+
+                {/* Selected tags */}
                 <div className="flex flex-wrap gap-2 mb-2">
                   {formData.tags.map((tag, index) => (
                     <div
@@ -403,6 +427,29 @@ const UploadResource = () => {
                     </div>
                   ))}
                 </div>
+
+                {/* Predefined tags */}
+                <div className="mb-3">
+                  <p className="text-sm text-gray-600 dark:text-gray-400 mb-2">Common tags:</p>
+                  <div className="flex flex-wrap gap-2">
+                    {predefinedTags.map((tag) => (
+                      <button
+                        key={tag}
+                        type="button"
+                        onClick={() => handlePredefinedTagSelect(tag)}
+                        className={`text-xs px-3 py-1 rounded-full transition-colors ${
+                          formData.tags.includes(tag.toLowerCase())
+                            ? "bg-emerald-500 text-white"
+                            : "bg-gray-200 dark:bg-gray-700 text-gray-700 dark:text-gray-300 hover:bg-emerald-100 dark:hover:bg-emerald-900/30"
+                        }`}
+                      >
+                        {tag}
+                      </button>
+                    ))}
+                  </div>
+                </div>
+
+                {/* Custom tag input */}
                 <div className="flex">
                   <input
                     type="text"
@@ -411,7 +458,7 @@ const UploadResource = () => {
                     onChange={handleTagInputChange}
                     onKeyDown={handleTagInputKeyDown}
                     className="flex-grow border border-gray-300 dark:border-gray-600 rounded-l-lg px-4 py-3 focus:outline-none focus:ring-2 focus:ring-emerald-500 dark:bg-gray-700 dark:text-white"
-                    placeholder="Add tags (e.g., notes, assignment, etc.)"
+                    placeholder="Add custom tag..."
                   />
                   <button
                     type="button"
@@ -421,9 +468,7 @@ const UploadResource = () => {
                     <FiPlus className="w-5 h-5" />
                   </button>
                 </div>
-                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">
-                  Common tags: notes, assignment, past paper, presentation
-                </p>
+                <p className="text-sm text-gray-500 dark:text-gray-400 mt-1">Press Enter to add a custom tag</p>
               </div>
             </div>
           </div>
