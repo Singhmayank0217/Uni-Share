@@ -53,26 +53,26 @@ const Dashboard = () => {
     <div>
       <div className="flex justify-between items-center mb-6">
         <h1 className="text-2xl font-bold">Dashboard</h1>
-        <Link to="/upload" className="bg-blue-600 text-white px-4 py-2 rounded-md font-semibold hover:bg-blue-700">
+        <Link to="/upload" className="bg-blue-600 text-white px-4 py-2 rounded-[5px] font-semibold hover:bg-teal-400">
           Upload New Resource
         </Link>
       </div>
 
-      <div className="bg-white rounded-lg shadow-md overflow-hidden mb-8">
+      <div className="bg-white dark:bg-teal-400 rounded-[10px] shadow-md overflow-hidden mb-8">
         <div className="p-6">
-          <h2 className="text-xl font-semibold mb-4">Welcome, {currentUser.name}!</h2>
+          <h2 className="text-2xl font-bold text-center mb-4">Welcome, {currentUser.name}!</h2>
           <div className="grid grid-cols-1 md:grid-cols-3 gap-4">
-            <div className="bg-blue-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-blue-600 mb-1">{currentUser.uploadCount || 0}</div>
-              <div className="text-sm text-gray-600">Resources Uploaded</div>
+            <div className="bg-blue-50 p-4 rounded-[5px]">
+              <div className="text-2xl font-bold text-center  text-blue-600 mb-1">{currentUser.uploadCount || 0}</div>
+              <div className="text-sm text-center text-gray-600">Resources Uploaded</div>
             </div>
-            <div className="bg-green-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-green-600 mb-1">{currentUser.bookmarkCount || 0}</div>
-              <div className="text-sm text-gray-600">Bookmarked Resources</div>
+            <div className="bg-green-50 p-4 rounded-[5px]">
+              <div className="text-2xl font-bold text-center text-green-600 mb-1">{currentUser.bookmarkCount || 0}</div>
+              <div className="text-sm text-center text-gray-600">Bookmarked Resources</div>
             </div>
-            <div className="bg-purple-50 p-4 rounded-lg">
-              <div className="text-2xl font-bold text-purple-600 mb-1">{currentUser.reviewCount || 0}</div>
-              <div className="text-sm text-gray-600">Reviews Written</div>
+            <div className="bg-purple-50 p-4 rounded-[5px]">
+              <div className="text-2xl font-bold text-center text-purple-600 mb-1">{currentUser.reviewCount || 0}</div>
+              <div className="text-sm text-center text-gray-600">Reviews Written</div>
             </div>
           </div>
         </div>

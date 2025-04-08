@@ -40,7 +40,7 @@ const Leaderboard = () => {
             <button
               className={`py-4 px-6 font-medium text-sm focus:outline-none ${
                 activeTab === "uploads"
-                  ? "border-b-2 border-blue-500 text-blue-600"
+                  ? "border-b-2 border-blue-500 text-blue-600 dark:border-teal-500 dark:text-teal-400"
                   : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
               onClick={() => setActiveTab("uploads")}
@@ -50,7 +50,7 @@ const Leaderboard = () => {
             <button
               className={`py-4 px-6 font-medium text-sm focus:outline-none ${
                 activeTab === "downloads"
-                  ? "border-b-2 border-blue-500 text-blue-600"
+                  ? "border-b-2 border-blue-500 text-blue-600 dark:border-teal-500 dark:text-teal-400"
                   : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
               onClick={() => setActiveTab("downloads")}
@@ -60,7 +60,7 @@ const Leaderboard = () => {
             <button
               className={`py-4 px-6 font-medium text-sm focus:outline-none ${
                 activeTab === "ratings"
-                  ? "border-b-2 border-blue-500 text-blue-600"
+                  ? "border-b-2 border-blue-500 text-blue-600 dark:border-teal-500 dark:text-teal-400"
                   : "text-gray-500 hover:text-gray-700 hover:border-gray-300"
               }`}
               onClick={() => setActiveTab("ratings")}
@@ -84,42 +84,42 @@ const Leaderboard = () => {
         </div>
       ) : (
         <div className="bg-white rounded-[10px] shadow-md overflow-hidden">
-          <table className="min-w-full divide-y divide-gray-200">
-            <thead className="bg-gray-50">
+          <table className="min-w-full divide-y divide-gray-300 ">
+            <thead className="bg-blue-500 dark:bg-teal-400">
               <tr>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                 >
                   Rank
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                 >
                   User
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                 >
                   {activeTab === "uploads" ? "Uploads" : activeTab === "downloads" ? "Downloads" : "Average Rating"}
                 </th>
                 <th
                   scope="col"
-                  className="px-6 py-3 text-left text-xs font-medium text-gray-500 uppercase tracking-wider"
+                  className="px-6 py-3 text-left text-xs font-medium text-white uppercase tracking-wider"
                 >
                   Resources
                 </th>
               </tr>
             </thead>
-            <tbody className="bg-white divide-y divide-gray-200">
+            <tbody className="bg-white  divide-y divide-gray-200">
               {users.map((user, index) => (
                 <tr key={user._id} className={index < 3 ? "bg-blue-50" : ""}>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
                       {index < 3 ? (
-                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-600 text-white font-bold">
+                        <span className="flex items-center justify-center w-8 h-8 rounded-full bg-blue-500 dark:bg-teal-400 text-white font-bold">
                           {index + 1}
                         </span>
                       ) : (
@@ -129,7 +129,7 @@ const Leaderboard = () => {
                   </td>
                   <td className="px-6 py-4 whitespace-nowrap">
                     <div className="flex items-center">
-                      <div className="flex-shrink-0 h-10 w-10 bg-blue-500 rounded-full flex items-center justify-center text-white font-semibold">
+                      <div className="flex-shrink-0 h-10 w-10 bg-blue-500 dark:bg-teal-400 rounded-full flex items-center justify-center text-white font-semibold">
                         {user.name.charAt(0)}
                       </div>
                       <div className="ml-4">

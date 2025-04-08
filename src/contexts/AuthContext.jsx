@@ -109,26 +109,28 @@ export function AuthProvider({ children }) {
   const githubLogin = async (code) => {
     try {
       const response = await api.post("/api/auth/github", { code })
-      const { token, user } = response.data
+      const githubToken = response.data.token
+      const githubUser = response.data.user
 
-      localStorage.setItem("token", token)
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-      setCurrentUser(user)
-      return user
+      localStorage.setItem("token", githubToken)
+      api.defaults.headers.common["Authorization"] = `Bearer ${githubToken}`
+      setCurrentUser(githubUser)
+      return githubUser
     } catch (error) {
       throw error
     }
   }
 
-  const googleLogin = async (token) => {
+  const googleLogin = async (credential) => {
     try {
-      const response = await api.post("/api/auth/google", { token })
-      const { token: authToken, user } = response.data
+      const response = await api.post("/api/auth/google", { credential })
+      const googleToken = response.data.token
+      const googleUser = response.data.user
 
-      localStorage.setItem("token", authToken)
-      api.defaults.headers.common["Authorization"] = `Bearer ${authToken}`
-      setCurrentUser(user)
-      return user
+      localStorage.setItem("token", googleToken)
+      api.defaults.headers.common["Authorization"] = `Bearer ${googleToken}`
+      setCurrentUser(googleUser)
+      return googleUser
     } catch (error) {
       throw error
     }
@@ -149,4 +151,3 @@ export function AuthProvider({ children }) {
 
   return <AuthContext.Provider value={value}>{!loading && children}</AuthContext.Provider>
 }
-

@@ -5,6 +5,7 @@ import { auth } from "../middleware/auth.js"
 import User from "../models/User.js"
 import Resource from "../models/Resource.js"
 import crypto from "crypto"
+import nodemailer from "nodemailer"
 
 const router = express.Router()
 
@@ -62,7 +63,7 @@ router.put("/password", auth, async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" })
     }
 
-    // Hash new password - Note: we don't use the save middleware here to avoid potential issues
+    // Hash new password
     const salt = await bcrypt.genSalt(10)
     user.password = await bcrypt.hash(newPassword, salt)
 
@@ -88,6 +89,29 @@ router.put("/password", auth, async (req, res) => {
     res.status(500).json({ message: "Server error" })
   }
 })
+
+// Configure email transporter
+const createTransporter = () => {
+  // For development, use a test email service or console log
+  if (process.env.NODE_ENV === "development") {
+    // Log to console for development
+    return {
+      sendMail: (mailOptions) => {
+        console.log("Password reset URL:", mailOptions.text)
+        return Promise.resolve({ messageId: "test-id" })
+      },
+    }
+  }
+
+  // For production, use a real email service
+  return nodemailer.createTransport({
+    service: process.env.EMAIL_SERVICE || "gmail",
+    auth: {
+      user: process.env.EMAIL_USERNAME,
+      pass: process.env.EMAIL_PASSWORD,
+    },
+  })
+}
 
 // Request password reset
 router.post("/forgot-password", async (req, res) => {
@@ -115,11 +139,23 @@ router.post("/forgot-password", async (req, res) => {
     // Create reset URL
     const resetUrl = `${process.env.CLIENT_URL || "http://localhost:3000"}/reset-password/${resetToken}`
 
-    // For development - log the reset URL to console
-    console.log("Password reset URL:", resetUrl)
+    // Create email content
+    const mailOptions = {
+      from: process.env.EMAIL_FROM || "noreply@unishare.com",
+      to: user.email,
+      subject: "Password Reset Request",
+      text: `You are receiving this because you (or someone else) requested a password reset for your account.\n\n
+        Please click on the following link, or paste it into your browser to complete the process:\n\n
+        ${resetUrl}\n\n
+        If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+    }
 
-    // In a production environment, you would send an email here
-    // We're skipping the actual email sending for now
+    // Send email
+    const transporter = createTransporter()
+    await transporter.sendMail(mailOptions)
+
+    // Log the reset URL to console for development
+    console.log("Password reset URL:", resetUrl)
 
     res.status(200).json({ message: "If an account with that email exists, a password reset link has been sent." })
   } catch (error) {
@@ -143,7 +179,7 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Password reset token is invalid or has expired" })
     }
 
-    // Hash new password - Note: we explicitly hash it here rather than using the middleware
+    // Hash new password
     const salt = await bcrypt.genSalt(10)
     user.password = await bcrypt.hash(newPassword, salt)
 
@@ -232,4 +268,3 @@ router.get("/bookmarks", auth, async (req, res) => {
 })
 
 export default router
-

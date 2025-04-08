@@ -136,7 +136,7 @@ const Profile = () => {
       <h1 className="text-2xl font-bold mb-6">My Profile</h1>
 
       <div className="grid grid-cols-1 md:grid-cols-3 gap-6 mb-8">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-[10px] shadow-md p-6">
           <div className="text-center">
             <div className="w-24 h-24 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center text-white text-3xl font-bold mx-auto mb-4">
               {currentUser?.name?.charAt(0) || "U"}
@@ -158,26 +158,26 @@ const Profile = () => {
           </div>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6 md:col-span-2">
+        <div className="bg-white dark:bg-gray-800 rounded-[10px] shadow-md p-6 md:col-span-2">
           <h2 className="text-lg font-semibold mb-4">Activity Summary</h2>
           <div className="grid grid-cols-2 md:grid-cols-3 gap-4">
-            <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-lg text-center">
+            <div className="bg-emerald-50 dark:bg-emerald-900/20 p-3 rounded-[5px] text-center">
               <div className="text-xl font-bold text-emerald-600 dark:text-emerald-400">{stats.uploads}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Uploads</div>
             </div>
-            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-lg text-center">
+            <div className="bg-yellow-50 dark:bg-yellow-900/20 p-3 rounded-[5px] text-center">
               <div className="text-xl font-bold text-yellow-600 dark:text-yellow-400">{stats.bookmarks}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Bookmarks</div>
             </div>
-            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-lg text-center">
+            <div className="bg-green-50 dark:bg-green-900/20 p-3 rounded-[5px] text-center">
               <div className="text-xl font-bold text-green-600 dark:text-green-400">{stats.reviews}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Reviews</div>
             </div>
-            <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-lg text-center">
+            <div className="bg-purple-50 dark:bg-purple-900/20 p-3 rounded-[5px] text-center">
               <div className="text-xl font-bold text-purple-600 dark:text-purple-400">{stats.totalViews}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Total Views</div>
             </div>
-            <div className="bg-pink-50 dark:bg-pink-900/20 p-3 rounded-lg text-center">
+            <div className="bg-pink-50 dark:bg-pink-900/20 p-3 rounded-[5px] text-center">
               <div className="text-xl font-bold text-pink-600 dark:text-pink-400">{stats.totalDownloads}</div>
               <div className="text-sm text-gray-600 dark:text-gray-400">Total Downloads</div>
             </div>
@@ -186,7 +186,7 @@ const Profile = () => {
       </div>
 
       <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-[10px] shadow-md p-6">
           <h2 className="text-lg font-semibold mb-4">Update Profile</h2>
 
           {success && (
@@ -252,7 +252,7 @@ const Profile = () => {
           </form>
         </div>
 
-        <div className="bg-white dark:bg-gray-800 rounded-lg shadow-md p-6">
+        <div className="bg-white dark:bg-gray-800 rounded-[10px] shadow-md p-6">
           <h2 className="text-lg font-semibold mb-4">Change Password</h2>
 
           {error && (

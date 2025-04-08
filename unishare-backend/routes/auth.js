@@ -127,6 +127,10 @@ router.post("/github", async (req, res) => {
   try {
     const { code } = req.body
 
+    if (!code) {
+      return res.status(400).json({ message: "Authorization code is required" })
+    }
+
     // Exchange code for access token
     const tokenResponse = await axios.post(
       "https://github.com/login/oauth/access_token",
@@ -142,12 +146,17 @@ router.post("/github", async (req, res) => {
       },
     )
 
-    const { access_token } = tokenResponse.data
+    if (!tokenResponse.data.access_token) {
+      console.error("GitHub token response:", tokenResponse.data)
+      return res.status(400).json({ message: "Failed to get access token from GitHub" })
+    }
+
+    const access_token = tokenResponse.data.access_token
 
     // Get user data from GitHub
     const userResponse = await axios.get("https://api.github.com/user", {
       headers: {
-        Authorization: `token ${access_token}`,
+        Authorization: `Bearer ${access_token}`,
       },
     })
 
@@ -158,7 +167,7 @@ router.post("/github", async (req, res) => {
     if (!email) {
       const emailsResponse = await axios.get("https://api.github.com/user/emails", {
         headers: {
-          Authorization: `token ${access_token}`,
+          Authorization: `Bearer ${access_token}`,
         },
       })
 
@@ -225,10 +234,14 @@ router.post("/github", async (req, res) => {
 // Google OAuth login
 router.post("/google", async (req, res) => {
   try {
-    const { token: idToken } = req.body
+    const { credential } = req.body
 
-    // Verify Google token
-    const response = await axios.get(`https://www.googleapis.com/oauth2/v3/tokeninfo?id_token=${idToken}`)
+    if (!credential) {
+      return res.status(400).json({ message: "Google credential is required" })
+    }
+
+    // For Google Sign-In, we need to verify the token
+    const response = await axios.get(`https://oauth2.googleapis.com/tokeninfo?id_token=${credential}`)
 
     if (!response.data) {
       return res.status(400).json({ message: "Invalid Google token" })
@@ -322,4 +335,3 @@ router.post("/verify-password", async (req, res) => {
 })
 
 export default router
-

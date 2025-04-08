@@ -3,16 +3,14 @@
 import { useState } from "react"
 import { motion } from "framer-motion"
 import { FiMail, FiX, FiAlertCircle, FiCheckCircle } from "react-icons/fi"
-import { useAuth } from "../../contexts/AuthContext"
+import api from "../../services/api"
 import { toast } from "react-hot-toast"
-import api from "../../utils/api"
 
 const ForgotPasswordModal = ({ onClose }) => {
   const [email, setEmail] = useState("")
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState("")
   const [success, setSuccess] = useState(false)
-  const { forgotPassword } = useAuth()
 
   const handleSubmit = async (e) => {
     e.preventDefault()
@@ -28,8 +26,8 @@ const ForgotPasswordModal = ({ onClose }) => {
 
       const response = await api.post("/api/users/forgot-password", { email })
 
-      setSuccess(response.data.message || "Password reset email sent. Please check your inbox.")
-      toast.success("Password reset email sent")
+      setSuccess(true)
+      toast.success("Password reset email sent. Please check your inbox.")
     } catch (err) {
       console.error("Forgot password error:", err)
       const errorMessage = err.response?.data?.message || "Failed to send password reset email"
@@ -58,6 +56,11 @@ const ForgotPasswordModal = ({ onClose }) => {
         </button>
 
         <div className="text-center mb-6">
+          <div className="flex justify-center mb-4">
+            <div className="w-16 h-16 bg-gradient-to-r from-emerald-500 to-teal-500 rounded-full flex items-center justify-center">
+              <FiMail className="h-8 w-8 text-white" />
+            </div>
+          </div>
           <h2 className="text-2xl font-bold text-gray-900 dark:text-white mb-2">Forgot Your Password?</h2>
           <p className="text-gray-600 dark:text-gray-400">
             {success
@@ -157,4 +160,3 @@ const ForgotPasswordModal = ({ onClose }) => {
 }
 
 export default ForgotPasswordModal
-
