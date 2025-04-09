@@ -63,9 +63,12 @@ router.put("/password", auth, async (req, res) => {
       return res.status(400).json({ message: "Current password is incorrect" })
     }
 
-    // Hash new password
+    // Hash new password manually
     const salt = await bcrypt.genSalt(10)
-    user.password = await bcrypt.hash(newPassword, salt)
+    const hashedPassword = await bcrypt.hash(newPassword, salt)
+
+    // Update the password directly
+    user.password = hashedPassword
 
     // Save the updated user
     await user.save()
@@ -92,12 +95,15 @@ router.put("/password", auth, async (req, res) => {
 
 // Configure email transporter
 const createTransporter = () => {
-  // For development, use a test email service or console log
-  if (process.env.NODE_ENV === "development") {
-    // Log to console for development
+  // For development/testing, just log to console
+  if (process.env.NODE_ENV !== "production") {
     return {
       sendMail: (mailOptions) => {
-        console.log("Password reset URL:", mailOptions.text)
+        console.log("========== EMAIL CONTENT ==========")
+        console.log(`To: ${mailOptions.to}`)
+        console.log(`Subject: ${mailOptions.subject}`)
+        console.log(`Text: ${mailOptions.text}`)
+        console.log("===================================")
         return Promise.resolve({ messageId: "test-id" })
       },
     }
@@ -144,10 +150,13 @@ router.post("/forgot-password", async (req, res) => {
       from: process.env.EMAIL_FROM || "noreply@unishare.com",
       to: user.email,
       subject: "Password Reset Request",
-      text: `You are receiving this because you (or someone else) requested a password reset for your account.\n\n
-        Please click on the following link, or paste it into your browser to complete the process:\n\n
-        ${resetUrl}\n\n
-        If you did not request this, please ignore this email and your password will remain unchanged.\n`,
+      text: `You are receiving this because you (or someone else) requested a password reset for your account.
+      
+Please click on the following link, or paste it into your browser to complete the process:
+      
+${resetUrl}
+      
+If you did not request this, please ignore this email and your password will remain unchanged.`,
     }
 
     // Send email
@@ -179,9 +188,12 @@ router.post("/reset-password", async (req, res) => {
       return res.status(400).json({ message: "Password reset token is invalid or has expired" })
     }
 
-    // Hash new password
+    // Hash new password manually
     const salt = await bcrypt.genSalt(10)
-    user.password = await bcrypt.hash(newPassword, salt)
+    const hashedPassword = await bcrypt.hash(newPassword, salt)
+
+    // Update the password directly
+    user.password = hashedPassword
 
     // Clear reset token fields
     user.resetPasswordToken = undefined
