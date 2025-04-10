@@ -141,8 +141,11 @@ router.get("/:id", async (req, res) => {
 
     // Check if resource is bookmarked by user (if authenticated)
     let isBookmarked = false
+    let isOwner = false
+
     if (req.user) {
       isBookmarked = req.user.bookmarks.includes(resource._id)
+      isOwner = req.user._id.toString() === resource.uploader._id.toString()
     }
 
     // Format resource for response
@@ -162,9 +165,11 @@ router.get("/:id", async (req, res) => {
       uploader: {
         name: resource.uploader.name,
         uid: resource.uploader.uid,
+        _id: resource.uploader._id,
       },
       reviews: resource.reviews,
       isBookmarked,
+      isOwner,
     }
 
     res.json(formattedResource)
@@ -390,5 +395,47 @@ router.post("/:id/reviews", auth, async (req, res) => {
   }
 })
 
-export default router
+// Delete a resource
+router.delete("/:id", auth, async (req, res) => {
+  try {
+    const resourceId = req.params.id
 
+    // Find the resource
+    const resource = await Resource.findById(resourceId)
+
+    if (!resource) {
+      return res.status(404).json({ message: "Resource not found" })
+    }
+
+    // Check if the user is the owner of the resource
+    if (resource.uploader.toString() !== req.user._id.toString()) {
+      return res.status(403).json({ message: "You can only delete your own resources" })
+    }
+
+    // Delete all files associated with the resource
+    if (resource.files && resource.files.length > 0) {
+      resource.files.forEach((file) => {
+        const filePath = path.join(__dirname, "..", file.path)
+        if (fs.existsSync(filePath)) {
+          fs.unlinkSync(filePath)
+        }
+      })
+    }
+
+    // Remove resource from all users' bookmarks
+    await User.updateMany({ bookmarks: resourceId }, { $pull: { bookmarks: resourceId }, $inc: { bookmarkCount: -1 } })
+
+    // Decrement uploader's upload count
+    await User.findByIdAndUpdate(resource.uploader, { $inc: { uploadCount: -1 } })
+
+    // Delete the resource
+    await Resource.findByIdAndDelete(resourceId)
+
+    res.json({ message: "Resource deleted successfully" })
+  } catch (error) {
+    console.error("Delete resource error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+export default router

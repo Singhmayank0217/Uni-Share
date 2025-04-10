@@ -63,7 +63,7 @@ const Navbar = () => {
 
           {/* Desktop Navigation */}
           <div className="hidden md:flex items-center space-x-6">
-            <Link to="/" className="hover:text-teal-400 flex items-center gap-1">
+            <Link to="/" className="hover:text-teal-400  flex items-center gap-1">
               <FiHome /> Home
             </Link>
             <Link to="/leaderboard" className="hover:text-teal-400 flex items-center gap-1">

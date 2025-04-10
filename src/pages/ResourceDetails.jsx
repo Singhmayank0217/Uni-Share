@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, Link } from "react-router-dom"
+import { useParams, Link, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../services/api"
 import ReviewForm from "../components/resources/ReviewForm"
@@ -16,17 +16,22 @@ import {
   FiCalendar,
   FiTag,
   FiBook,
+  FiTrash2,
+  FiAlertTriangle,
 } from "react-icons/fi"
 import toast from "react-hot-toast"
 
 const ResourceDetails = () => {
   const { id } = useParams()
+  const navigate = useNavigate()
   const { currentUser } = useAuth()
   const [resource, setResource] = useState(null)
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isBookmarked, setIsBookmarked] = useState(false)
   const [relatedResources, setRelatedResources] = useState([])
+  const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
+  const [deleteLoading, setDeleteLoading] = useState(false)
 
   useEffect(() => {
     fetchResourceDetails()
@@ -109,6 +114,26 @@ const ResourceDetails = () => {
     }
   }
 
+  const handleDeleteResource = async () => {
+    if (!currentUser || !resource || !resource.isOwner) {
+      toast.error("You can only delete your own resources")
+      return
+    }
+
+    try {
+      setDeleteLoading(true)
+      await api.delete(`/api/resources/${id}`)
+      toast.success("Resource deleted successfully")
+      navigate("/dashboard") // Redirect to dashboard after deletion
+    } catch (error) {
+      console.error("Error deleting resource:", error)
+      toast.error("Failed to delete resource")
+    } finally {
+      setDeleteLoading(false)
+      setShowDeleteConfirm(false)
+    }
+  }
+
   // Helper functions to safely get subject and branch names
   const getSubjectName = () => {
     if (!resource || !resource.subject) return "Unknown Subject"
@@ -142,6 +167,47 @@ const ResourceDetails = () => {
 
   return (
     <div className="max-w-4xl mx-auto">
+      {/* Delete Confirmation Modal */}
+      {showDeleteConfirm && (
+        <div className="fixed inset-0 bg-black bg-opacity-50 z-50 flex items-center justify-center p-4">
+          <div className="bg-white dark:bg-gray-800 rounded-lg shadow-xl p-6 max-w-md w-full">
+            <div className="flex items-center text-red-500 mb-4">
+              <FiAlertTriangle className="w-6 h-6 mr-2" />
+              <h3 className="text-xl font-bold">Delete Resource</h3>
+            </div>
+            <p className="text-gray-700 dark:text-gray-300 mb-6">
+              Are you sure you want to delete this resource? This action cannot be undone and all associated files will
+              be permanently removed.
+            </p>
+            <div className="flex justify-end space-x-3">
+              <button
+                onClick={() => setShowDeleteConfirm(false)}
+                className="px-4 py-2 bg-gray-200 dark:bg-gray-700 rounded-md text-gray-800 dark:text-gray-200 hover:bg-gray-300 dark:hover:bg-gray-600 transition-colors"
+                disabled={deleteLoading}
+              >
+                Cancel
+              </button>
+              <button
+                onClick={handleDeleteResource}
+                className="px-4 py-2 bg-red-600 rounded-md text-white hover:bg-red-700 transition-colors flex items-center"
+                disabled={deleteLoading}
+              >
+                {deleteLoading ? (
+                  <>
+                    <span className="animate-spin h-4 w-4 mr-2 border-t-2 border-b-2 border-white rounded-full"></span>
+                    Deleting...
+                  </>
+                ) : (
+                  <>
+                    <FiTrash2 className="mr-1" /> Delete
+                  </>
+                )}
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
       <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg overflow-hidden border border-gray-200 dark:border-gray-700 mb-8">
         <div className="p-6">
           <div className="flex justify-between items-start mb-6">
@@ -161,13 +227,24 @@ const ResourceDetails = () => {
                 </span>
               </div>
             </div>
-            <button
-              onClick={handleBookmark}
-              className={`text-3xl focus:outline-none transition-transform hover:scale-110 ${isBookmarked ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"}`}
-              title={isBookmarked ? "Remove bookmark" : "Bookmark this resource"}
-            >
-              <FiBookmark className={`w-6 h-6 ${isBookmarked ? "fill-yellow-500 text-yellow-500" : ""}`} />
-            </button>
+            <div className="flex items-center space-x-2">
+              {resource.isOwner && (
+                <button
+                  onClick={() => setShowDeleteConfirm(true)}
+                  className="text-red-500 hover:text-red-700 focus:outline-none transition-transform hover:scale-110"
+                  title="Delete this resource"
+                >
+                  <FiTrash2 className="w-6 h-6" />
+                </button>
+              )}
+              <button
+                onClick={handleBookmark}
+                className={`text-3xl focus:outline-none transition-transform hover:scale-110 ${isBookmarked ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"}`}
+                title={isBookmarked ? "Remove bookmark" : "Bookmark this resource"}
+              >
+                <FiBookmark className={`w-6 h-6 ${isBookmarked ? "fill-yellow-500 text-yellow-500" : ""}`} />
+              </button>
+            </div>
           </div>
 
           <div className="flex flex-wrap gap-2 mb-6">
@@ -333,4 +410,3 @@ const ResourceDetails = () => {
 }
 
 export default ResourceDetails
-

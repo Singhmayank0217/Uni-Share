@@ -183,7 +183,7 @@ const Footer = () => {
             {/* Contact */}
             <div className="md:col-span-1">
               <h4 className="text-lg font-semibold mb-5 flex items-center">
-                <span className="w-8 h-8 bg-blue-600 rounded-full flex items-center justify-center mr-2">
+                <span className="w-8 h-8 bg-teal-400 rounded-full flex items-center justify-center mr-2">
                   <FiMail className="w-4 h-4" />
                 </span>
                 Team
@@ -196,7 +196,7 @@ const Footer = () => {
                 Mayank 
               </a>
               <a
-                href="https://github.com/RahulChoudhary05"
+                href="https://rahulchoudhary05.vercel.app/"
                 className="inline-block bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 transform hover:scale-105"
               >
                 Rahul 

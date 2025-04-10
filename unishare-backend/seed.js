@@ -98,10 +98,13 @@ async function seedDatabase() {
     await Subject.insertMany(subjects)
 
     console.log("Database seeded successfully")
-    mongoose.connection.close()
+    // mongoose.connection.close()
   } catch (error) {
     console.error("Error seeding database:", error)
-    mongoose.connection.close()
+    // mongoose.connection.close()
   }
 }
 
+export async function runSeed() {
+  await seedDatabase();
+}
