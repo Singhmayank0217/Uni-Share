@@ -149,10 +149,10 @@ const Register = () => {
         <div className="absolute inset-0 bg-white dark:bg-gray-900 rounded-2xl shadow-xl z-10 p-8 border border-gray-200 dark:border-gray-700">
           <motion.div className="space-y-6" variants={containerVariants} initial="hidden" animate="visible">
             <motion.div className="text-center" variants={itemVariants}>
-              <h2 className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent">
+              <h2 className="text-3xl font-extrabold bg-gradient-to-r from-emerald-600 to-teal-600 bg-clip-text text-transparent -mt-4">
                 {currentStep === 1 ? "Create Account" : "Set Password"}
               </h2>
-              <p className="mt-2 text-sm text-gray-600 dark:text-gray-400">
+              <p className="mt-5 text-sm text-gray-600 dark:text-gray-400">
                 {currentStep === 1 ? "Join our community of learners" : "Choose a secure password for your account"}
               </p>
             </motion.div>
