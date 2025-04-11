@@ -174,7 +174,7 @@ const Navbar = () => {
 
             {currentUser ? (
               <>
-                <Link to="/dashboard" className=" py-2 hover:text-teal-400flex items-center gap-2">
+                <Link to="/dashboard" className=" py-2 hover:text-teal-400 flex items-center gap-2">
                   <FiGrid /> Dashboard
                 </Link>
                 <Link to="/upload" className=" py-2 hover:text-teal-400 flex items-center gap-2">
