@@ -190,7 +190,7 @@ const Footer = () => {
               </h4>
               <p className="text-gray-300 mb-4">Our Dedicated team members</p>
               <a
-                href="https://my-portfolio-sepia-ten-43.vercel.app/"
+                href="https://mayanksinghrajput.vercel.app/"
                 className="inline-block bg-gradient-to-r from-emerald-600 to-teal-600 text-white px-4 py-2 rounded-md hover:from-emerald-700 hover:to-teal-700 transition-all duration-300 transform hover:scale-105 mr-2"
               >
                 Mayank 
