@@ -211,7 +211,7 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
     const files = req.files.map((file) => ({
       filename: file.filename,
       originalname: file.originalname,
-      path: file.path,
+      path: path.relative(process.cwd(), file.path),
       size: file.size,
       mimetype: file.mimetype,
     }))
