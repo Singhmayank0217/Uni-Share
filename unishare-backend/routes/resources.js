@@ -258,26 +258,44 @@ router.get("/:id/download", async (req, res) => {
     // Find resource and increment download count
     const resource = await Resource.findByIdAndUpdate(resourceId, { $inc: { downloads: 1 } }, { new: true })
 
-    if (!resource || !resource.files || resource.files.length === 0) {
+    if (!resource) {
       return res.status(404).json({ message: "Resource not found" })
     }
 
-    // Get first file (main file)
+    // Check if resource has files
+    if (!resource.files || resource.files.length === 0) {
+      return res.status(404).json({ message: "No files found for this resource" })
+    }
+
+    // Get the first file (main file)
     const file = resource.files[0]
-    const filePath = path.join(__dirname, "..", file.path)
+
+    // Construct the absolute file path
+    const filePath = file.path
+
+    console.log("Attempting to download file:", filePath)
 
     // Check if file exists
     if (!fs.existsSync(filePath)) {
-      return res.status(404).json({ message: "File not found" })
+      console.error("File not found at path:", filePath)
+      return res.status(404).json({ message: "File not found on server" })
     }
 
-    // Set headers
-    res.setHeader("Content-Disposition", `attachment; filename="${file.originalname}"`)
-    res.setHeader("Content-Type", file.mimetype)
+    // Set appropriate headers for download
+    res.setHeader("Content-Type", file.mimetype || "application/octet-stream")
+    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(file.originalname)}"`)
 
-    // Stream file
+    // Stream the file to the response
     const fileStream = fs.createReadStream(filePath)
     fileStream.pipe(res)
+
+    // Handle stream errors
+    fileStream.on("error", (error) => {
+      console.error("Error streaming file:", error)
+      if (!res.headersSent) {
+        res.status(500).json({ message: "Error streaming file" })
+      }
+    })
   } catch (error) {
     console.error("Download resource error:", error)
     res.status(500).json({ message: "Server error" })
@@ -415,7 +433,7 @@ router.delete("/:id", auth, async (req, res) => {
     // Delete all files associated with the resource
     if (resource.files && resource.files.length > 0) {
       resource.files.forEach((file) => {
-        const filePath = path.join(__dirname, "..", file.path)
+        const filePath = file.path
         if (fs.existsSync(filePath)) {
           fs.unlinkSync(filePath)
         }

@@ -4,6 +4,7 @@ import cors from "cors"
 import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
+import fs from "fs"
 import authRoutes from "./routes/auth.js"
 import userRoutes from "./routes/users.js"
 import resourceRoutes from "./routes/resources.js"
@@ -12,11 +13,6 @@ import subjectRoutes from "./routes/subjects.js"
 import leaderboardRoutes from "./routes/leaderboard.js"
 import studyGroupRoutes from "./routes/studyGroups.js"
 import { auth } from "./middleware/auth.js"
-import { runSeed } from './seed.js';
-
-// runSeed();/
-
-
 import { scheduleMessageCleanup } from "./utils/messageCleanup.js"
 
 // Initialize environment variables
@@ -30,12 +26,30 @@ const PORT = process.env.PORT || 5000
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
+// Create uploads directory if it doesn't exist
+const uploadsDir = path.join(__dirname, "uploads")
+if (!fs.existsSync(uploadsDir)) {
+  fs.mkdirSync(uploadsDir, { recursive: true })
+}
+
+// Create resources uploads directory
+const resourcesUploadsDir = path.join(uploadsDir, "resources")
+if (!fs.existsSync(resourcesUploadsDir)) {
+  fs.mkdirSync(resourcesUploadsDir, { recursive: true })
+}
+
+// Create study group uploads directory
+const studyGroupUploadsDir = path.join(uploadsDir, "study-groups")
+if (!fs.existsSync(studyGroupUploadsDir)) {
+  fs.mkdirSync(studyGroupUploadsDir, { recursive: true })
+}
+
 // Middleware
 app.use(cors())
 app.use(express.json())
 app.use(express.urlencoded({ extended: true }))
 
-// Static files
+// Static files - make uploads directory accessible
 app.use("/uploads", express.static(path.join(__dirname, "uploads")))
 
 // Routes
@@ -62,11 +76,6 @@ mongoose
   .connect(process.env.MONGODB_URI)
   .then(() => {
     console.log("Connected to MongoDB")
-
-    // Run seed data if needed
-    if (process.env.SEED_DATA === "true") {
-      runSeed()
-    }
 
     // Schedule message cleanup
     scheduleMessageCleanup()

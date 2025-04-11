@@ -12,6 +12,12 @@ if (!fs.existsSync(uploadsDir)) {
   fs.mkdirSync(uploadsDir, { recursive: true })
 }
 
+// Create resources uploads directory
+const resourcesUploadsDir = path.join(uploadsDir, "resources")
+if (!fs.existsSync(resourcesUploadsDir)) {
+  fs.mkdirSync(resourcesUploadsDir, { recursive: true })
+}
+
 // Create study group uploads directory
 const studyGroupUploadsDir = path.join(uploadsDir, "study-groups")
 if (!fs.existsSync(studyGroupUploadsDir)) {
@@ -29,7 +35,8 @@ const storage = multer.diskStorage({
       }
       cb(null, groupDir)
     } else {
-      cb(null, uploadsDir)
+      // For resources
+      cb(null, resourcesUploadsDir)
     }
   },
   filename: (req, file, cb) => {
@@ -55,4 +62,3 @@ const upload = multer({
 })
 
 export default upload
-

@@ -64,7 +64,13 @@ const ResourceDetails = () => {
 
   const handleDownload = async () => {
     try {
-      const response = await api.get(`/api/resources/${id}/download`, { responseType: "blob" })
+      // Use responseType blob to handle binary data
+      const response = await api.get(`/api/resources/${id}/download`, {
+        responseType: "blob",
+        headers: {
+          Authorization: `Bearer ${localStorage.getItem("token")}`,
+        },
+      })
 
       // Create a URL for the blob
       const url = window.URL.createObjectURL(new Blob([response.data]))
@@ -72,12 +78,15 @@ const ResourceDetails = () => {
       // Create a temporary link and trigger download
       const link = document.createElement("a")
       link.href = url
-      link.setAttribute("download", resource.title + "." + resource.fileType)
+
+      // Use the resource title or a default name
+      const filename = resource.title ? `${resource.title}.${resource.fileType || "file"}` : "download"
+      link.setAttribute("download", filename)
+
+      // Append to body, click, and clean up
       document.body.appendChild(link)
       link.click()
-
-      // Clean up
-      link.parentNode.removeChild(link)
+      document.body.removeChild(link)
       window.URL.revokeObjectURL(url)
 
       toast.success("Download started")
