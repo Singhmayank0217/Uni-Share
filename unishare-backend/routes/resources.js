@@ -271,7 +271,7 @@ router.get("/:id/download", async (req, res) => {
     const file = resource.files[0]
 
     // Construct the absolute file path
-    const filePath = file.path
+    const filePath = path.join(process.cwd(), file.path)
 
     console.log("Attempting to download file:", filePath)
 
