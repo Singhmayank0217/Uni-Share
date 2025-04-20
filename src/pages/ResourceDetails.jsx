@@ -62,39 +62,40 @@ const ResourceDetails = () => {
     }
   }
 
+
   const handleDownload = async () => {
     try {
-      // Use responseType blob to handle binary data
       const response = await api.get(`/api/resources/${id}/download`, {
         responseType: "blob",
         headers: {
           Authorization: `Bearer ${localStorage.getItem("token")}`,
         },
-      })
-
-      // Create a URL for the blob
-      const url = window.URL.createObjectURL(new Blob([response.data]))
-
-      // Create a temporary link and trigger download
-      const link = document.createElement("a")
-      link.href = url
-
-      // Use the resource title or a default name
-      const filename = resource.title ? `${resource.title}.${resource.fileType || "file"}` : "download"
-      link.setAttribute("download", filename)
-
-      // Append to body, click, and clean up
-      document.body.appendChild(link)
-      link.click()
-      document.body.removeChild(link)
-      window.URL.revokeObjectURL(url)
-
-      toast.success("Download started")
+      });
+  
+      const url = window.URL.createObjectURL(new Blob([response.data]));
+      const link = document.createElement("a");
+      link.href = url;
+      const filename = resource.title ? `${resource.title}.${resource.fileType || "file"}` : "download";
+      link.setAttribute("download", filename);
+      document.body.appendChild(link);
+      link.click();
+      document.body.removeChild(link);
+      window.URL.revokeObjectURL(url);
+  
+      toast.success("Download started");
     } catch (err) {
-      console.error("Error downloading resource:", err)
-      toast.error("Failed to download resource")
+      if (err.response) {
+        if (err.response.status === 404) {
+          toast.error("Resource not found. It may have been deleted or moved.");
+        } else {
+          toast.error("Failed to download resource: " + err.response.data.message);
+        }
+      } else {
+        toast.error("Failed to download resource. Please check your connection.");
+      }
+      console.error("Error downloading resource:", err);
     }
-  }
+  };
 
   const handleBookmark = async () => {
     if (!currentUser) {
