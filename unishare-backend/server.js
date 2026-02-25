@@ -1,10 +1,10 @@
-import "dotenv/config"
 import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs from "fs"
+import dotenv from "dotenv"
 import authRoutes from "./routes/auth.js"
 import userRoutes from "./routes/users.js"
 import resourceRoutes from "./routes/resources.js"
@@ -14,6 +14,7 @@ import leaderboardRoutes from "./routes/leaderboard.js"
 import studyGroupRoutes from "./routes/studyGroups.js"
 import { auth } from "./middleware/auth.js"
 import { scheduleMessageCleanup } from "./utils/messageCleanup.js"
+import { isCloudinaryConfigured } from "./config/cloudinary.js"
 
 // Create Express app
 const app = express()
@@ -22,6 +23,18 @@ const PORT = process.env.PORT || 5000
 // Get __dirname equivalent in ES module
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
+
+dotenv.config({ path: path.join(__dirname, ".env") })
+
+const isTruthy = (value) => ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase())
+
+const isLocalStorageAllowed = () => {
+  if (process.env.ALLOW_LOCAL_STORAGE !== undefined) {
+    return isTruthy(process.env.ALLOW_LOCAL_STORAGE)
+  }
+
+  return process.env.NODE_ENV !== "production"
+}
 
 // Create uploads directory if it doesn't exist
 const uploadsDir = path.join(__dirname, "uploads")
@@ -81,6 +94,14 @@ const startServer = async () => {
   try {
     await mongoose.connect(mongoUri)
     console.log("Connected to MongoDB")
+    console.log(
+      "Upload storage config:",
+      JSON.stringify({
+        cloudinaryConfigured: isCloudinaryConfigured(),
+        localStorageAllowed: isLocalStorageAllowed(),
+        nodeEnv: process.env.NODE_ENV || "development",
+      }),
+    )
 
     // Schedule message cleanup
     scheduleMessageCleanup()
