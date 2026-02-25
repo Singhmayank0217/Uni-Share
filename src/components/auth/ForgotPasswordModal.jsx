@@ -24,7 +24,7 @@ const ForgotPasswordModal = ({ onClose }) => {
       setLoading(true)
       setError("")
 
-      const response = await api.post("/api/users/forgot-password", { email })
+      await api.post("/api/users/forgot-password", { email })
 
       setSuccess(true)
       toast.success("Password reset email sent. Please check your inbox.")

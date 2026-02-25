@@ -82,25 +82,33 @@ const Footer = () => {
               </p>
               <div className="flex space-x-4">
                 <a
-                  href="#"
+                  href="https://github.com"
+                  target="_blank"
+                  rel="noreferrer"
                   className="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform"
                 >
                   <FiGithub className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://twitter.com"
+                  target="_blank"
+                  rel="noreferrer"
                   className="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform"
                 >
                   <FiTwitter className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://www.linkedin.com"
+                  target="_blank"
+                  rel="noreferrer"
                   className="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform"
                 >
                   <FiLinkedin className="w-5 h-5" />
                 </a>
                 <a
-                  href="#"
+                  href="https://www.instagram.com"
+                  target="_blank"
+                  rel="noreferrer"
                   className="text-gray-400 hover:text-white transition-colors duration-300 hover:scale-110 transform"
                 >
                   <FiInstagram className="w-5 h-5" />

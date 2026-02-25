@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { useParams, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../services/api"
@@ -35,11 +35,7 @@ const ResourceDetails = () => {
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
-  useEffect(() => {
-    fetchResourceDetails()
-  }, [id])
-
-  const fetchResourceDetails = async () => {
+  const fetchResourceDetails = useCallback(async () => {
     try {
       setLoading(true)
       const response = await api.get(`/api/resources/${id}`)
@@ -54,7 +50,11 @@ const ResourceDetails = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [id])
+
+  useEffect(() => {
+    fetchResourceDetails()
+  }, [fetchResourceDetails])
 
   const handleDownload = async (file) => {
     try {

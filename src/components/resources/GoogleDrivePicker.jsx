@@ -6,7 +6,7 @@ import { FiCloud, FiLoader } from "react-icons/fi"
 import toast from "react-hot-toast"
 
 const GoogleDrivePicker = ({ onFileSelect }) => {
-  const [openPicker, authResponse] = useDrivePicker()
+  const [openPicker] = useDrivePicker()
   const [selectedFiles, setSelectedFiles] = useState([])
   const [loading, setLoading] = useState(false)
 

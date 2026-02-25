@@ -73,7 +73,7 @@ const Profile = () => {
       setSuccess("")
       setLoading(true)
 
-      const response = await api.put("/api/users/profile", {
+      await api.put("/api/users/profile", {
         name: formData.name,
         email: formData.email,
         uid: formData.uid,

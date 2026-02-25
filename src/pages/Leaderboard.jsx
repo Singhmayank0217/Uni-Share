@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import api from "../services/api"
 
 const Leaderboard = () => {
@@ -9,11 +9,7 @@ const Leaderboard = () => {
   const [error, setError] = useState(null)
   const [activeTab, setActiveTab] = useState("uploads")
 
-  useEffect(() => {
-    fetchLeaderboard()
-  }, [activeTab])
-
-  const fetchLeaderboard = async () => {
+  const fetchLeaderboard = useCallback(async () => {
     try {
       setLoading(true)
       const response = await api.get(`/api/leaderboard?type=${activeTab}`)
@@ -25,7 +21,11 @@ const Leaderboard = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [activeTab])
+
+  useEffect(() => {
+    fetchLeaderboard()
+  }, [fetchLeaderboard])
 
   return (
     <div>

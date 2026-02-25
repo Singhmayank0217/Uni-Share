@@ -1,7 +1,7 @@
 "use client"
 
-import { useState, useEffect } from "react"
-import { Link, useNavigate } from "react-router-dom"
+import { useState, useEffect, useCallback } from "react"
+import { Link } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../services/api"
 import ResourceCard from "../components/resources/ResourceCard"
@@ -12,7 +12,6 @@ import { useTheme } from "../contexts/ThemeContext"
 const Dashboard = () => {
   const { currentUser } = useAuth()
   const { darkMode } = useTheme()
-  const navigate = useNavigate()
   const [resources, setResources] = useState([])
   const [bookmarks, setBookmarks] = useState([])
   const [stats, setStats] = useState({
@@ -28,19 +27,7 @@ const Dashboard = () => {
   const [deleteConfirm, setDeleteConfirm] = useState(null)
   const [deleting, setDeleting] = useState(false)
 
-  useEffect(() => {
-    fetchUserData()
-  }, [])
-
-  useEffect(() => {
-    if (activeTab === "uploads") {
-      fetchUserUploads()
-    } else if (activeTab === "bookmarks") {
-      fetchUserBookmarks()
-    }
-  }, [activeTab])
-
-  const fetchUserData = async () => {
+  const fetchUserData = useCallback(async () => {
     try {
       setLoading(true)
       // Use the correct endpoint for user stats
@@ -69,7 +56,19 @@ const Dashboard = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [currentUser?.bookmarkCount, currentUser?.reviewCount])
+
+  useEffect(() => {
+    fetchUserData()
+  }, [fetchUserData])
+
+  useEffect(() => {
+    if (activeTab === "uploads") {
+      fetchUserUploads()
+    } else if (activeTab === "bookmarks") {
+      fetchUserBookmarks()
+    }
+  }, [activeTab])
 
   const fetchUserUploads = async () => {
     try {

@@ -2,7 +2,6 @@
 
 import { useState, useEffect } from "react"
 import { useNavigate } from "react-router-dom"
-import { useAuth } from "../contexts/AuthContext"
 import api from "../services/api"
 import { toast } from "react-hot-toast"
 import {
@@ -34,7 +33,6 @@ const predefinedTags = [
 ]
 
 const UploadResource = () => {
-  const { currentUser } = useAuth()
   const navigate = useNavigate()
 
   const [formData, setFormData] = useState({

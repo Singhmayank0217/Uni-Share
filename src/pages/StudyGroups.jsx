@@ -1,9 +1,8 @@
 "use client"
 
-import { useState, useEffect, useRef } from "react"
+import { useState, useEffect, useRef, useCallback } from "react"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../services/api"
-import { useTheme } from "../contexts/ThemeContext"
 import {
   FiPaperclip,
   FiSend,
@@ -29,7 +28,6 @@ import React from "react"
 
 const StudyGroups = () => {
   const { currentUser } = useAuth()
-  const { theme } = useTheme()
   const [groups, setGroups] = useState([])
   const [myGroups, setMyGroups] = useState([])
   const [loading, setLoading] = useState(true)
@@ -58,48 +56,12 @@ const StudyGroups = () => {
   const [activeTab, setActiveTab] = useState("myGroups") // myGroups, discover, favorites
   const [favoriteGroups, setFavoriteGroups] = useState([])
   const [refreshing, setRefreshing] = useState(false)
-  const [showFilters, setShowFilters] = useState(false)
   const [filters, setFilters] = useState({
     semester: "",
     subject: "",
   })
 
-  useEffect(() => {
-    fetchStudyGroups()
-    fetchSubjects()
-
-    // Responsive sidebar handling
-    const handleResize = () => {
-      if (window.innerWidth < 768) {
-        setShowSidebar(false)
-      } else {
-        setShowSidebar(true)
-      }
-    }
-
-    handleResize()
-    window.addEventListener("resize", handleResize)
-
-    return () => {
-      window.removeEventListener("resize", handleResize)
-    }
-  }, [])
-
-  useEffect(() => {
-    if (activeGroup) {
-      fetchMessages(activeGroup._id)
-    }
-  }, [activeGroup])
-
-  useEffect(() => {
-    scrollToBottom()
-  }, [messages])
-
-  const scrollToBottom = () => {
-    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
-  }
-
-  const fetchStudyGroups = async () => {
+  const fetchStudyGroups = useCallback(async () => {
     try {
       setRefreshing(true)
       setLoading(true)
@@ -121,14 +83,16 @@ const StudyGroups = () => {
       setMyGroups(processedMyGroups)
 
       // Set some random groups as favorites for demo
-      if (favoriteGroups.length === 0 && processedAllGroups.length > 0) {
-        const randomGroups = [...processedAllGroups]
+      setFavoriteGroups((previousFavorites) => {
+        if (previousFavorites.length > 0 || processedAllGroups.length === 0) {
+          return previousFavorites
+        }
+
+        return [...processedAllGroups]
           .sort(() => 0.5 - Math.random())
           .slice(0, Math.min(3, processedAllGroups.length))
-          .map((g) => g._id)
-
-        setFavoriteGroups(randomGroups)
-      }
+          .map((group) => group._id)
+      })
 
       setError(null)
     } catch (err) {
@@ -139,9 +103,9 @@ const StudyGroups = () => {
       setLoading(false)
       setRefreshing(false)
     }
-  }
+  }, [])
 
-  const fetchSubjects = async () => {
+  const fetchSubjects = useCallback(async () => {
     try {
       const response = await api.get("/api/subjects")
       setSubjects(response.data)
@@ -149,6 +113,41 @@ const StudyGroups = () => {
       console.error("Error fetching subjects:", error)
       toast.error("Failed to load subjects")
     }
+  }, [])
+
+  useEffect(() => {
+    fetchStudyGroups()
+    fetchSubjects()
+
+    // Responsive sidebar handling
+    const handleResize = () => {
+      if (window.innerWidth < 768) {
+        setShowSidebar(false)
+      } else {
+        setShowSidebar(true)
+      }
+    }
+
+    handleResize()
+    window.addEventListener("resize", handleResize)
+
+    return () => {
+      window.removeEventListener("resize", handleResize)
+    }
+  }, [fetchStudyGroups, fetchSubjects])
+
+  useEffect(() => {
+    if (activeGroup) {
+      fetchMessages(activeGroup._id)
+    }
+  }, [activeGroup])
+
+  useEffect(() => {
+    scrollToBottom()
+  }, [messages])
+
+  const scrollToBottom = () => {
+    messagesEndRef.current?.scrollIntoView({ behavior: "smooth" })
   }
 
   const fetchMessages = async (groupId) => {
@@ -295,11 +294,6 @@ const StudyGroups = () => {
 
   const handleFileButtonClick = () => {
     fileInputRef.current.click()
-  }
-
-  const formatDate = (dateString) => {
-    const date = new Date(dateString)
-    return date.toLocaleString()
   }
 
   const getFileIcon = (fileType) => {

@@ -1,6 +1,6 @@
 "use client"
 
-import { createContext, useState, useEffect, useContext } from "react"
+import { createContext, useState, useEffect, useContext, useCallback } from "react"
 import api from "../services/api"
 import toast from "react-hot-toast"
 
@@ -14,18 +14,13 @@ export function AuthProvider({ children }) {
   const [currentUser, setCurrentUser] = useState(null)
   const [loading, setLoading] = useState(true)
 
-  useEffect(() => {
-    // Check if user is logged in on page load
-    const token = localStorage.getItem("token")
-    if (token) {
-      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
-      fetchUserProfile()
-    } else {
-      setLoading(false)
-    }
+  const logout = useCallback(() => {
+    localStorage.removeItem("token")
+    delete api.defaults.headers.common["Authorization"]
+    setCurrentUser(null)
   }, [])
 
-  const fetchUserProfile = async () => {
+  const fetchUserProfile = useCallback(async () => {
     try {
       const response = await api.get("/api/users/profile")
       setCurrentUser(response.data)
@@ -35,7 +30,18 @@ export function AuthProvider({ children }) {
     } finally {
       setLoading(false)
     }
-  }
+  }, [logout])
+
+  useEffect(() => {
+    // Check if user is logged in on page load
+    const token = localStorage.getItem("token")
+    if (token) {
+      api.defaults.headers.common["Authorization"] = `Bearer ${token}`
+      fetchUserProfile()
+    } else {
+      setLoading(false)
+    }
+  }, [fetchUserProfile])
 
   const login = async (email, password) => {
     try {
@@ -63,12 +69,6 @@ export function AuthProvider({ children }) {
     } catch (error) {
       throw error
     }
-  }
-
-  const logout = () => {
-    localStorage.removeItem("token")
-    delete api.defaults.headers.common["Authorization"]
-    setCurrentUser(null)
   }
 
   const updatePassword = async (currentPassword, newPassword) => {

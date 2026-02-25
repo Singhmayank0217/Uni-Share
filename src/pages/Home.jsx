@@ -1,6 +1,6 @@
 "use client"
 
-import { useState, useEffect } from "react"
+import { useState, useEffect, useCallback } from "react"
 import { Link, useLocation, useNavigate } from "react-router-dom"
 import api from "../services/api"
 import ResourceCard from "../components/resources/ResourceCard"
@@ -59,12 +59,7 @@ const Home = () => {
     }
   }, [location.search])
 
-  useEffect(() => {
-    fetchResources()
-    fetchStats()
-  }, [filters])
-
-  const fetchStats = async () => {
+  const fetchStats = useCallback(async () => {
     try {
       // This would be a real API call in a production app
       // For now, we'll use mock data
@@ -77,9 +72,9 @@ const Home = () => {
     } catch (err) {
       console.error("Error fetching stats:", err)
     }
-  }
+  }, [])
 
-  const fetchResources = async () => {
+  const fetchResources = useCallback(async () => {
     try {
       setLoading(true)
       const queryParams = new URLSearchParams()
@@ -108,7 +103,12 @@ const Home = () => {
     } finally {
       setLoading(false)
     }
-  }
+  }, [filters])
+
+  useEffect(() => {
+    fetchResources()
+    fetchStats()
+  }, [fetchResources, fetchStats])
 
   const handleFilterChange = (newFilters) => {
     setFilters({ ...filters, ...newFilters })
