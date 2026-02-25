@@ -34,13 +34,32 @@ const resourceSchema = new mongoose.Schema(
     },
     files: [
       {
+        // For local files
         filename: String,
         originalname: String,
         path: String,
         size: Number,
         mimetype: String,
+
+        // For Google Drive files
+        fileId: String,
+        name: String,
+        viewUrl: String,
+        downloadUrl: String,
+        mimeType: String,
+
+        // Source of the file (local or drive)
+        source: {
+          type: String,
+          enum: ["local", "drive", "cloudinary"],
+          default: "local",
+        },
       },
     ],
+    driveFolderId: {
+      type: String, // Google Drive folder ID for this resource
+      default: null,
+    },
     fileType: {
       type: String,
       required: true,
@@ -95,17 +114,18 @@ const resourceSchema = new mongoose.Schema(
 // Virtual for bookmarked status (to be populated in controller)
 resourceSchema.virtual("isBookmarked").get(() => false)
 
-// Calculate average rating before saving
+// Add a pre-save hook to calculate average rating
 resourceSchema.pre("save", function (next) {
+  // Calculate average rating
   if (this.reviews.length > 0) {
     const totalRating = this.reviews.reduce((sum, review) => sum + review.rating, 0)
     this.averageRating = totalRating / this.reviews.length
     this.totalRatings = this.reviews.length
   }
+
   next()
 })
 
 const Resource = mongoose.model("Resource", resourceSchema)
 
 export default Resource
-

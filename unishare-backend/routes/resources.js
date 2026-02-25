@@ -3,16 +3,32 @@ import fs from "fs"
 import path from "path"
 import { fileURLToPath } from "url"
 import { auth } from "../middleware/auth.js"
-import upload from "../middleware/upload.js"
 import Resource from "../models/Resource.js"
 import User from "../models/User.js"
 import Subject from "../models/Subject.js"
 import Branch from "../models/Branch.js"
+import upload from "../middleware/upload.js"
+import {
+  isCloudinaryConfigured,
+  uploadToCloudinary,
+  deleteFromCloudinary,
+  getCloudinarySignedUrl,
+} from "../config/cloudinary.js"
 
 const __filename = fileURLToPath(import.meta.url)
 const __dirname = path.dirname(__filename)
 
 const router = express.Router()
+
+const isTruthy = (value) => ["1", "true", "yes", "on"].includes(String(value || "").toLowerCase())
+
+const isLocalStorageAllowed = () => {
+  if (process.env.ALLOW_LOCAL_STORAGE !== undefined) {
+    return isTruthy(process.env.ALLOW_LOCAL_STORAGE)
+  }
+
+  return process.env.NODE_ENV !== "production"
+}
 
 // Get all resources with filters
 router.get("/", async (req, res) => {
@@ -170,6 +186,57 @@ router.get("/:id", async (req, res) => {
       reviews: resource.reviews,
       isBookmarked,
       isOwner,
+      // Process files based on their source
+      files:
+        resource.files && resource.files.length > 0
+          ? resource.files.map((file) => {
+              if (file.source === "drive") {
+                // Return Google Drive file info
+                return {
+                  filename: file.name,
+                  originalname: file.name,
+                  mimetype: file.mimeType,
+                  size: file.size,
+                  downloadUrl: file.downloadUrl,
+                  viewUrl: file.viewUrl,
+                  source: "drive",
+                  fileId: file.fileId,
+                }
+              } else if (file.source === "cloudinary") {
+                const cloudinaryOriginalName = file.originalname || file.name || file.filename
+                const signedViewUrl = getCloudinarySignedUrl(file.fileId, cloudinaryOriginalName)
+                const signedDownloadUrl = getCloudinarySignedUrl(file.fileId, cloudinaryOriginalName, {
+                  asAttachment: true,
+                })
+
+                return {
+                  filename: file.filename || file.name,
+                  originalname: file.originalname || file.name,
+                  mimetype: file.mimetype || file.mimeType,
+                  size: file.size,
+                  downloadUrl: signedDownloadUrl || file.downloadUrl,
+                  viewUrl: signedViewUrl || file.viewUrl,
+                  source: "cloudinary",
+                  fileId: file.fileId,
+                }
+              } else {
+                // Create a download URL for local files
+                const baseUrl = `${req.protocol}://${req.get("host")}`
+                const downloadUrl = `${baseUrl}/api/resources/download/${resource._id}/${file.filename}`
+                const viewUrl = downloadUrl
+
+                return {
+                  filename: file.filename,
+                  originalname: file.originalname,
+                  mimetype: file.mimetype,
+                  size: file.size,
+                  downloadUrl: downloadUrl,
+                  viewUrl: viewUrl,
+                  source: "local",
+                }
+              }
+            })
+          : [],
     }
 
     res.json(formattedResource)
@@ -179,9 +246,10 @@ router.get("/:id", async (req, res) => {
   }
 })
 
-// Create a new resource
+// Create resource with files uploaded to Google Drive
 router.post("/", auth, upload.array("files", 5), async (req, res) => {
   try {
+    console.log("Processing resource upload...")
     const { title, description, branch, semester, subject, tags } = req.body
 
     // Validate branch
@@ -208,16 +276,77 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
       return res.status(400).json({ message: "No files uploaded" })
     }
 
-    const files = req.files.map((file) => ({
-      filename: file.filename,
-      originalname: file.originalname,
-      path: path.relative(process.cwd(), file.path),
-      size: file.size,
-      mimetype: file.mimetype,
-    }))
+    console.log(
+      "Files received:",
+      req.files.map((f) => f.originalname),
+    )
+
+    const cloudinaryEnabled = isCloudinaryConfigured()
+    const allowLocalStorage = isLocalStorageAllowed()
+
+    let fileData = []
+    if (cloudinaryEnabled) {
+      console.log("Using Cloudinary storage...")
+
+      for (const file of req.files) {
+        try {
+          const uploadResult = await uploadToCloudinary(file.path, file.originalname)
+
+          fileData.push({
+            fileId: uploadResult.publicId,
+            name: file.originalname,
+            originalname: file.originalname,
+            size: uploadResult.bytes || file.size,
+            mimeType: file.mimetype,
+            viewUrl: uploadResult.secureUrl,
+            downloadUrl: uploadResult.secureUrl,
+            source: "cloudinary",
+          })
+
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path)
+          }
+        } catch (cloudinaryError) {
+          console.error(`Failed to upload ${file.originalname} to Cloudinary:`, cloudinaryError)
+
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path)
+          }
+
+          return res.status(502).json({
+            message: "Cloud upload failed. Please retry in a moment.",
+          })
+        }
+      }
+    }
+
+    // If cloud upload is not available, use local files
+    if (fileData.length === 0) {
+      if (!allowLocalStorage) {
+        for (const file of req.files) {
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path)
+          }
+        }
+
+        return res.status(503).json({
+          message: "Persistent storage is unavailable. Configure Cloudinary to upload files.",
+        })
+      }
+
+      console.log("Using local file storage as fallback...")
+      fileData = req.files.map((file) => ({
+        filename: file.filename,
+        originalname: file.originalname,
+        path: file.path,
+        size: file.size,
+        mimetype: file.mimetype,
+        source: "local",
+      }))
+    }
 
     // Determine file type from first file
-    const fileExtension = path.extname(req.files[0].originalname).toLowerCase().substring(1)
+    const fileExtension = req.files[0].originalname.split(".").pop().toLowerCase()
     const fileType = fileExtension
 
     // Create resource - Ensure tags are properly normalized
@@ -233,12 +362,14 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
       semester,
       subject,
       uploader: req.user._id,
-      files,
+      files: fileData,
       fileType,
       tags: normalizedTags,
+      driveFolderId: null,
     })
 
     await resource.save()
+    console.log("Resource saved successfully:", resource._id)
 
     // Increment user's upload count
     await User.findByIdAndUpdate(req.user._id, { $inc: { uploadCount: 1 } })
@@ -246,17 +377,129 @@ router.post("/", auth, upload.array("files", 5), async (req, res) => {
     res.status(201).json(resource)
   } catch (error) {
     console.error("Create resource error:", error)
+
+    // Clean up any temporary files
+    if (req.files) {
+      for (const file of req.files) {
+        if (fs.existsSync(file.path)) {
+          fs.unlinkSync(file.path)
+          console.log(`Cleaned up temporary file: ${file.path}`)
+        }
+      }
+    }
+
+    res.status(500).json({ message: "Server error: " + (error.message || "Unknown error") })
+  }
+})
+
+// Create resource from Google Drive selected files
+router.post("/drive-files", auth, async (req, res) => {
+  try {
+    const { title, description, branch, semester, subject, tags, driveFiles } = req.body
+
+    if (!title || !description || !branch || !semester || !subject) {
+      return res.status(400).json({ message: "Please fill in all required fields" })
+    }
+
+    if (!Array.isArray(driveFiles) || driveFiles.length === 0) {
+      return res.status(400).json({ message: "No Google Drive files selected" })
+    }
+
+    const branchExists = await Branch.findById(branch)
+    if (!branchExists) {
+      return res.status(400).json({ message: "Invalid branch" })
+    }
+
+    const subjectExists = await Subject.findById(subject)
+    if (!subjectExists) {
+      return res.status(400).json({ message: "Invalid subject" })
+    }
+
+    if (subjectExists.branch.toString() !== branch || subjectExists.semester.toString() !== semester.toString()) {
+      return res.status(400).json({
+        message: "Subject does not belong to the selected branch and semester",
+      })
+    }
+
+    const mappedDriveFiles = driveFiles
+      .map((file) => {
+        const fileId = file.id || file.fileId
+        const fileName = file.name || file.originalname || "Google Drive File"
+        const mimeType = file.mimeType || file.type || "application/octet-stream"
+        const viewUrl = file.viewUrl || file.url || (fileId ? `https://drive.google.com/file/d/${fileId}/view` : null)
+        const downloadUrl =
+          file.downloadUrl || (fileId ? `https://drive.google.com/uc?export=download&id=${fileId}` : viewUrl)
+
+        return {
+          fileId,
+          name: fileName,
+          originalname: fileName,
+          size: Number(file.sizeBytes || file.size || 0),
+          mimeType,
+          viewUrl,
+          downloadUrl,
+          source: "drive",
+        }
+      })
+      .filter((file) => file.fileId || file.viewUrl)
+
+    if (mappedDriveFiles.length === 0) {
+      return res.status(400).json({ message: "Selected Google Drive files are invalid" })
+    }
+
+    const firstFileName = mappedDriveFiles[0].name || ""
+    const fileExtension = firstFileName.includes(".") ? firstFileName.split(".").pop().toLowerCase() : "drive"
+    const fileType = fileExtension || "drive"
+
+    const parsedTags = tags ? (Array.isArray(tags) ? tags : [tags]) : []
+    const normalizedTags = parsedTags.map((tag) => tag.toLowerCase())
+
+    const resource = new Resource({
+      title,
+      description,
+      branch,
+      semester,
+      subject,
+      uploader: req.user._id,
+      files: mappedDriveFiles,
+      fileType,
+      tags: normalizedTags,
+      driveFolderId: null,
+    })
+
+    await resource.save()
+
+    await User.findByIdAndUpdate(req.user._id, { $inc: { uploadCount: 1 } })
+
+    res.status(201).json(resource)
+  } catch (error) {
+    console.error("Create resource from Google Drive error:", error)
     res.status(500).json({ message: "Server error" })
   }
 })
 
-// Download resource
-router.get("/:id/download", async (req, res) => {
+// Add a new route to increment download count without downloading
+router.post("/:id/increment-downloads", async (req, res) => {
   try {
     const resourceId = req.params.id
 
     // Find resource and increment download count
-    const resource = await Resource.findByIdAndUpdate(resourceId, { $inc: { downloads: 1 } }, { new: true })
+    await Resource.findByIdAndUpdate(resourceId, { $inc: { downloads: 1 } })
+
+    res.json({ success: true })
+  } catch (error) {
+    console.error("Error incrementing downloads:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+// Add this route to get file information for a resource
+router.get("/:id/file-info", async (req, res) => {
+  try {
+    const resourceId = req.params.id
+
+    // Find resource
+    const resource = await Resource.findById(resourceId)
 
     if (!resource) {
       return res.status(404).json({ message: "Resource not found" })
@@ -267,37 +510,55 @@ router.get("/:id/download", async (req, res) => {
       return res.status(404).json({ message: "No files found for this resource" })
     }
 
-    // Get the first file (main file)
-    const file = resource.files[0]
+    // Return file information
+    res.json({
+      files: resource.files.map((file) => {
+        if (file.source === "drive") {
+          return {
+            filename: file.name,
+            originalname: file.name,
+            mimetype: file.mimeType,
+            size: file.size,
+            downloadUrl: file.downloadUrl,
+            viewUrl: file.viewUrl,
+            source: "drive",
+            fileId: file.fileId,
+          }
+        } else if (file.source === "cloudinary") {
+          const cloudinaryOriginalName = file.originalname || file.name || file.filename
+          const signedViewUrl = getCloudinarySignedUrl(file.fileId, cloudinaryOriginalName)
+          const signedDownloadUrl = getCloudinarySignedUrl(file.fileId, cloudinaryOriginalName, {
+            asAttachment: true,
+          })
 
-    // Construct the absolute file path
-    const filePath = path.join(process.cwd(), file.path)
+          return {
+            filename: file.filename || file.name,
+            originalname: file.originalname || file.name,
+            mimetype: file.mimetype || file.mimeType,
+            size: file.size,
+            downloadUrl: signedDownloadUrl || file.downloadUrl,
+            viewUrl: signedViewUrl || file.viewUrl,
+            source: "cloudinary",
+            fileId: file.fileId,
+          }
+        } else {
+          const baseUrl = `${req.protocol}://${req.get("host")}`
+          const downloadUrl = `${baseUrl}/api/resources/download/${resource._id}/${file.filename}`
 
-    console.log("Attempting to download file:", filePath)
-
-    // Check if file exists
-    if (!fs.existsSync(filePath)) {
-      console.error("File not found at path:", filePath)
-      return res.status(404).json({ message: "File not found on server" })
-    }
-
-    // Set appropriate headers for download
-    res.setHeader("Content-Type", file.mimetype || "application/octet-stream")
-    res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(file.originalname)}"`)
-
-    // Stream the file to the response
-    const fileStream = fs.createReadStream(filePath)
-    fileStream.pipe(res)
-
-    // Handle stream errors
-    fileStream.on("error", (error) => {
-      console.error("Error streaming file:", error)
-      if (!res.headersSent) {
-        res.status(500).json({ message: "Error streaming file" })
-      }
+          return {
+            filename: file.filename,
+            originalname: file.originalname,
+            mimetype: file.mimetype,
+            size: file.size,
+            downloadUrl: downloadUrl,
+            viewUrl: downloadUrl,
+            source: "local",
+          }
+        }
+      }),
     })
   } catch (error) {
-    console.error("Download resource error:", error)
+    console.error("Get file info error:", error)
     res.status(500).json({ message: "Server error" })
   }
 })
@@ -413,7 +674,7 @@ router.post("/:id/reviews", auth, async (req, res) => {
   }
 })
 
-// Delete a resource
+// Delete a resource - updated to delete from Google Drive
 router.delete("/:id", auth, async (req, res) => {
   try {
     const resourceId = req.params.id
@@ -430,14 +691,31 @@ router.delete("/:id", auth, async (req, res) => {
       return res.status(403).json({ message: "You can only delete your own resources" })
     }
 
-    // Delete all files associated with the resource
+    // Delete all files from Google Drive
     if (resource.files && resource.files.length > 0) {
-      resource.files.forEach((file) => {
-        const filePath = file.path
-        if (fs.existsSync(filePath)) {
-          fs.unlinkSync(filePath)
+      for (const file of resource.files) {
+        if (file.source === "drive" && file.fileId) {
+          console.log(`Skipping delete for legacy Google Drive file: ${file.fileId}`)
+        } else if (file.source === "cloudinary" && file.fileId) {
+          try {
+            await deleteFromCloudinary(file.fileId)
+            console.log(`Deleted file from Cloudinary: ${file.fileId}`)
+          } catch (error) {
+            console.error(`Error deleting file from Cloudinary: ${file.fileId}`, error)
+          }
+        } else if (file.source === "local" && file.path) {
+          // Delete local file if it exists
+          if (fs.existsSync(file.path)) {
+            fs.unlinkSync(file.path)
+            console.log(`Deleted local file: ${file.path}`)
+          }
         }
-      })
+      }
+    }
+
+    // Delete the resource folder in Google Drive if it exists
+    if (resource.driveFolderId) {
+      console.log(`Skipping delete for legacy Google Drive folder: ${resource.driveFolderId}`)
     }
 
     // Remove resource from all users' bookmarks
@@ -452,6 +730,76 @@ router.delete("/:id", auth, async (req, res) => {
     res.json({ message: "Resource deleted successfully" })
   } catch (error) {
     console.error("Delete resource error:", error)
+    res.status(500).json({ message: "Server error" })
+  }
+})
+
+// Download a file
+router.get("/download/:resourceId/:filename", async (req, res) => {
+  try {
+    const { resourceId, filename } = req.params
+
+    // Find the resource
+    const resource = await Resource.findById(resourceId)
+
+    if (!resource) {
+      return res.status(404).json({ message: "Resource not found" })
+    }
+
+    // Find the file in the resource
+    const file = resource.files.find((f) => f.filename === filename || f.name === filename)
+
+    if (!file) {
+      return res.status(404).json({ message: "File not found" })
+    }
+
+    // Increment download count
+    await Resource.findByIdAndUpdate(resourceId, { $inc: { downloads: 1 } })
+
+    if (file.source === "drive" || file.source === "cloudinary") {
+      // Redirect to hosted file download URL
+      if (file.source === "cloudinary") {
+        const cloudinaryOriginalName = file.originalname || file.name || file.filename
+        const signedDownloadUrl = getCloudinarySignedUrl(file.fileId, cloudinaryOriginalName, {
+          asAttachment: true,
+        })
+        if (signedDownloadUrl) {
+          return res.redirect(signedDownloadUrl)
+        }
+      }
+
+      if (file.downloadUrl) {
+        return res.redirect(file.downloadUrl)
+      } else {
+        return res.status(404).json({ message: "Download URL not available" })
+      }
+    } else {
+      const resourcesDir = path.join(__dirname, "..", "uploads", "resources")
+      const safeFilename = path.basename(file.filename || file.originalname || filename)
+      const normalizedStoredPath = file.path ? path.normalize(file.path) : null
+
+      const candidatePaths = [
+        normalizedStoredPath,
+        safeFilename ? path.join(resourcesDir, safeFilename) : null,
+        file.path && safeFilename ? path.join(path.dirname(file.path), safeFilename) : null,
+      ].filter(Boolean)
+
+      const existingPath = candidatePaths.find((candidatePath) => fs.existsSync(candidatePath))
+
+      if (!existingPath) {
+        return res.status(404).json({ message: "File not found on server" })
+      }
+
+      // Set headers for file download
+      res.setHeader("Content-Disposition", `attachment; filename="${encodeURIComponent(file.originalname)}"`)
+      res.setHeader("Content-Type", file.mimetype || "application/octet-stream")
+
+      // Stream the file to the response
+      const fileStream = fs.createReadStream(existingPath)
+      fileStream.pipe(res)
+    }
+  } catch (error) {
+    console.error("Download file error:", error)
     res.status(500).json({ message: "Server error" })
   }
 })

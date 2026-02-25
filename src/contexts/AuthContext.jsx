@@ -106,44 +106,12 @@ export function AuthProvider({ children }) {
     }
   }
 
-  const githubLogin = async (code) => {
-    try {
-      const response = await api.post("/api/auth/github", { code })
-      const githubToken = response.data.token
-      const githubUser = response.data.user
-
-      localStorage.setItem("token", githubToken)
-      api.defaults.headers.common["Authorization"] = `Bearer ${githubToken}`
-      setCurrentUser(githubUser)
-      return githubUser
-    } catch (error) {
-      throw error
-    }
-  }
-
-  const googleLogin = async (credential) => {
-    try {
-      const response = await api.post("/api/auth/google", { credential })
-      const googleToken = response.data.token
-      const googleUser = response.data.user
-
-      localStorage.setItem("token", googleToken)
-      api.defaults.headers.common["Authorization"] = `Bearer ${googleToken}`
-      setCurrentUser(googleUser)
-      return googleUser
-    } catch (error) {
-      throw error
-    }
-  }
-
   const value = {
     currentUser,
     login,
     register,
     logout,
     loading,
-    githubLogin,
-    googleLogin,
     forgotPassword,
     resetPassword,
     updatePassword,

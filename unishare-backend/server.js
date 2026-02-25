@@ -1,7 +1,7 @@
+import "dotenv/config"
 import express from "express"
 import mongoose from "mongoose"
 import cors from "cors"
-import dotenv from "dotenv"
 import path from "path"
 import { fileURLToPath } from "url"
 import fs from "fs"
@@ -14,9 +14,6 @@ import leaderboardRoutes from "./routes/leaderboard.js"
 import studyGroupRoutes from "./routes/studyGroups.js"
 import { auth } from "./middleware/auth.js"
 import { scheduleMessageCleanup } from "./utils/messageCleanup.js"
-
-// Initialize environment variables
-dotenv.config()
 
 // Create Express app
 const app = express()
@@ -71,22 +68,50 @@ app.get("/api/protected", auth, (req, res) => {
   res.json({ message: "This is a protected route", user: req.user })
 })
 
-// Connect to MongoDB
-mongoose
-  .connect(process.env.MONGODB_URI)
-  .then(() => {
+const getMaskedMongoUri = (uri = "") => uri.replace(/:\/\/([^:]+):([^@]+)@/, "://$1:***@")
+
+const startServer = async () => {
+  const mongoUri = process.env.MONGODB_URI?.trim()
+
+  if (!mongoUri) {
+    console.error("Missing MONGODB_URI in .env")
+    process.exit(1)
+  }
+
+  try {
+    await mongoose.connect(mongoUri)
     console.log("Connected to MongoDB")
 
     // Schedule message cleanup
     scheduleMessageCleanup()
 
     // Start server
-    app.listen(PORT, () => {
+    const server = app.listen(PORT, () => {
       console.log(`Server running on port ${PORT}`)
     })
-  })
-  .catch((error) => {
-    console.error("MongoDB connection error:", error)
-  })
+
+    server.on("error", (listenError) => {
+      if (listenError.code === "EADDRINUSE") {
+        console.error(`Port ${PORT} is already in use. Another backend instance is likely running.`)
+        process.exit(0)
+      }
+
+      console.error("Server startup error:", listenError.message)
+      process.exit(1)
+    })
+  } catch (error) {
+    console.error("MongoDB connection error:", error.message)
+
+    if (error.code === "ENOTFOUND") {
+      console.error("The MongoDB Atlas hostname in MONGODB_URI does not exist.")
+      console.error("Update MONGODB_URI with the exact connection string from Atlas > Connect > Drivers.")
+      console.error("Current value:", getMaskedMongoUri(mongoUri))
+    }
+
+    process.exit(1)
+  }
+}
+
+startServer()
 
 export default app

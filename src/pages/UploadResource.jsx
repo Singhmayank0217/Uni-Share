@@ -16,7 +16,10 @@ import {
   FiBookOpen,
   FiFileText,
   FiInfo,
+  FiCloud,
+  FiHardDrive,
 } from "react-icons/fi"
+import GoogleDrivePicker from "../components/resources/GoogleDrivePicker"
 
 // Add this constant at the top of the component, after the imports
 const predefinedTags = [
@@ -52,6 +55,8 @@ const UploadResource = () => {
   const [uploadProgress, setUploadProgress] = useState(0)
   const [isDragging, setIsDragging] = useState(false)
   const [fileDetails, setFileDetails] = useState([])
+  const [uploadMethod, setUploadMethod] = useState("local") // 'local' or 'drive'
+  const [driveFiles, setDriveFiles] = useState([])
 
   useEffect(() => {
     fetchBranches()
@@ -115,6 +120,10 @@ const UploadResource = () => {
     }
   }
 
+  const handleDriveFileSelect = (files) => {
+    setDriveFiles(files)
+  }
+
   const formatFileSize = (bytes) => {
     if (bytes < 1024) return bytes + " bytes"
     else if (bytes < 1048576) return (bytes / 1024).toFixed(1) + " KB"
@@ -167,6 +176,12 @@ const UploadResource = () => {
     setFileDetails(newFileDetails)
   }
 
+  const removeDriveFile = (index) => {
+    const newFiles = [...driveFiles]
+    newFiles.splice(index, 1)
+    setDriveFiles(newFiles)
+  }
+
   const handleTagInputChange = (e) => {
     setTagInput(e.target.value)
   }
@@ -216,42 +231,84 @@ const UploadResource = () => {
   const handleSubmit = async (e) => {
     e.preventDefault()
 
-    if (formData.files.length === 0) {
-      setError("Please select at least one file to upload")
-      toast.error("Please select at least one file to upload")
+    // Validate common fields
+    if (!formData.title || !formData.description || !formData.branch || !formData.semester || !formData.subject) {
+      setError("Please fill in all required fields")
+      toast.error("Please fill in all required fields")
       return
     }
 
-    try {
-      setError("")
-      setLoading(true)
+    if (uploadMethod === "local") {
+      // Local file upload
+      if (formData.files.length === 0) {
+        setError("Please select at least one file to upload")
+        toast.error("Please select at least one file to upload")
+        return
+      }
 
-      const formDataToSend = new FormData()
-      formDataToSend.append("title", formData.title)
-      formDataToSend.append("description", formData.description)
-      formDataToSend.append("branch", formData.branch)
-      formDataToSend.append("semester", formData.semester)
-      formDataToSend.append("subject", formData.subject)
-      formData.tags.forEach((tag) => formDataToSend.append("tags", tag))
-      formData.files.forEach((file) => formDataToSend.append("files", file))
+      try {
+        setError("")
+        setLoading(true)
 
-      const response = await api.post("/api/resources", formDataToSend, {
-        onUploadProgress: (progressEvent) => {
-          const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
-          setUploadProgress(percentCompleted)
-        },
-      })
+        const formDataToSend = new FormData()
+        formDataToSend.append("title", formData.title)
+        formDataToSend.append("description", formData.description)
+        formDataToSend.append("branch", formData.branch)
+        formDataToSend.append("semester", formData.semester)
+        formDataToSend.append("subject", formData.subject)
+        formData.tags.forEach((tag) => formDataToSend.append("tags", tag))
+        formData.files.forEach((file) => formDataToSend.append("files", file))
 
-      toast.success("Resource uploaded successfully!")
-      navigate(`/resources/${response.data._id}`)
-    } catch (err) {
-      console.error("Error uploading resource:", err)
-      const errorMessage = err.response?.data?.message || "Failed to upload resource"
-      setError(errorMessage)
-      toast.error(errorMessage)
-      setUploadProgress(0)
-    } finally {
-      setLoading(false)
+        const response = await api.post("/api/resources", formDataToSend, {
+          onUploadProgress: (progressEvent) => {
+            const percentCompleted = Math.round((progressEvent.loaded * 100) / progressEvent.total)
+            setUploadProgress(percentCompleted)
+          },
+        })
+
+        toast.success("Resource uploaded successfully!")
+        navigate(`/resources/${response.data._id}`)
+      } catch (err) {
+        console.error("Error uploading resource:", err)
+        const errorMessage = err.response?.data?.message || "Failed to upload resource"
+        setError(errorMessage)
+        toast.error(errorMessage)
+        setUploadProgress(0)
+      } finally {
+        setLoading(false)
+      }
+    } else {
+      // Google Drive file upload
+      if (driveFiles.length === 0) {
+        setError("Please select at least one file from Google Drive")
+        toast.error("Please select at least one file from Google Drive")
+        return
+      }
+
+      try {
+        setError("")
+        setLoading(true)
+
+        const response = await api.post("/api/resources/drive-files", {
+          title: formData.title,
+          description: formData.description,
+          branch: formData.branch,
+          semester: formData.semester,
+          subject: formData.subject,
+          tags: formData.tags,
+          driveFiles: driveFiles,
+        })
+
+        toast.success("Resource uploaded successfully!")
+        navigate(`/resources/${response.data._id}`)
+      } catch (err) {
+        console.error("Error uploading resource from Google Drive:", err)
+        const errorMessage = err.response?.data?.message || "Failed to upload resource from Google Drive"
+        setError(errorMessage)
+        toast.error(errorMessage)
+      } finally {
+        setLoading(false)
+      }
     }
   }
 
@@ -473,80 +530,170 @@ const UploadResource = () => {
             </div>
           </div>
 
-          <div className="mt-6">
-            <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2 flex items-center">
-              <FiFile className="text-emerald-500 mr-2" /> Files
-            </label>
+          {/* Upload Method Selection */}
+          <div className="mb-6">
+            <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2">Upload Method</label>
+            <div className="grid grid-cols-2 gap-4">
+              <button
+                type="button"
+                onClick={() => setUploadMethod("local")}
+                className={`p-4 rounded-lg border-2 flex flex-col items-center justify-center transition-colors ${
+                  uploadMethod === "local"
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                    : "border-gray-300 dark:border-gray-600 hover:border-emerald-400"
+                }`}
+              >
+                <FiHardDrive
+                  className={`w-8 h-8 mb-2 ${uploadMethod === "local" ? "text-emerald-500" : "text-gray-500 dark:text-gray-400"}`}
+                />
+                <span
+                  className={`font-medium ${uploadMethod === "local" ? "text-emerald-700 dark:text-emerald-300" : "text-gray-700 dark:text-gray-300"}`}
+                >
+                  Upload from Device
+                </span>
+              </button>
 
-            <div
-              className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
-                isDragging
-                  ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
-                  : "border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-500"
-              }`}
-              onDragOver={handleDragOver}
-              onDragLeave={handleDragLeave}
-              onDrop={handleDrop}
-            >
-              <input type="file" id="files" onChange={handleFileChange} className="hidden" multiple />
-
-              <div className="space-y-4">
-                <div className="mx-auto w-16 h-16 bg-emerald-100 dark:bg-emerald-800/50 rounded-full flex items-center justify-center">
-                  <FiUpload className="w-8 h-8 text-emerald-600 dark:text-emerald-300" />
-                </div>
-
-                <div>
-                  <p className="text-gray-700 dark:text-gray-300 mb-2">
-                    Drag and drop your files here, or
-                    <button
-                      type="button"
-                      onClick={() => document.getElementById("files").click()}
-                      className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline ml-1"
-                    >
-                      browse
-                    </button>
-                  </p>
-                  <p className="text-sm text-gray-500 dark:text-gray-400">
-                    Supports PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, ZIP, JPG, PNG (Max 10MB)
-                  </p>
-                </div>
-              </div>
+              <button
+                type="button"
+                onClick={() => setUploadMethod("drive")}
+                className={`p-4 rounded-lg border-2 flex flex-col items-center justify-center transition-colors ${
+                  uploadMethod === "drive"
+                    ? "border-blue-500 bg-blue-50 dark:bg-blue-900/20"
+                    : "border-gray-300 dark:border-gray-600 hover:border-blue-400"
+                }`}
+              >
+                <FiCloud
+                  className={`w-8 h-8 mb-2 ${uploadMethod === "drive" ? "text-blue-500" : "text-gray-500 dark:text-gray-400"}`}
+                />
+                <span
+                  className={`font-medium ${uploadMethod === "drive" ? "text-blue-700 dark:text-blue-300" : "text-gray-700 dark:text-gray-300"}`}
+                >
+                  Select from Google Drive
+                </span>
+              </button>
             </div>
-
-            {/* File list */}
-            {fileDetails.length > 0 && (
-              <div className="mt-4 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
-                <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
-                  Selected Files ({fileDetails.length})
-                </h4>
-                <div className="space-y-2 max-h-40 overflow-y-auto">
-                  {fileDetails.map((file, index) => (
-                    <div
-                      key={index}
-                      className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded"
-                    >
-                      <div className="flex items-center">
-                        <FiFile className="text-emerald-500 mr-2" />
-                        <div className="text-sm">
-                          <p className="text-gray-700 dark:text-gray-300 font-medium">{file.name}</p>
-                          <p className="text-gray-500 dark:text-gray-400">{file.size}</p>
-                        </div>
-                      </div>
-                      <button
-                        type="button"
-                        onClick={() => removeFile(index)}
-                        className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
-                      >
-                        <FiX />
-                      </button>
-                    </div>
-                  ))}
-                </div>
-              </div>
-            )}
           </div>
 
-          {loading && uploadProgress > 0 && (
+          {/* Local File Upload */}
+          {uploadMethod === "local" && (
+            <div className="mt-6">
+              <label className="block text-gray-700 dark:text-gray-200 font-medium mb-2 flex items-center">
+                <FiFile className="text-emerald-500 mr-2" /> Files
+              </label>
+
+              <div
+                className={`border-2 border-dashed rounded-lg p-8 text-center transition-colors ${
+                  isDragging
+                    ? "border-emerald-500 bg-emerald-50 dark:bg-emerald-900/20"
+                    : "border-gray-300 dark:border-gray-600 hover:border-emerald-400 dark:hover:border-emerald-500"
+                }`}
+                onDragOver={handleDragOver}
+                onDragLeave={handleDragLeave}
+                onDrop={handleDrop}
+              >
+                <input type="file" id="files" onChange={handleFileChange} className="hidden" multiple />
+
+                <div className="space-y-4">
+                  <div className="mx-auto w-16 h-16 bg-emerald-100 dark:bg-emerald-800/50 rounded-full flex items-center justify-center">
+                    <FiUpload className="w-8 h-8 text-emerald-600 dark:text-emerald-300" />
+                  </div>
+
+                  <div>
+                    <p className="text-gray-700 dark:text-gray-300 mb-2">
+                      Drag and drop your files here, or
+                      <button
+                        type="button"
+                        onClick={() => document.getElementById("files").click()}
+                        className="text-emerald-600 dark:text-emerald-400 font-medium hover:underline ml-1"
+                      >
+                        browse
+                      </button>
+                    </p>
+                    <p className="text-sm text-gray-500 dark:text-gray-400">
+                      Supports PDF, DOC, DOCX, PPT, PPTX, XLS, XLSX, ZIP, JPG, PNG (Max 10MB)
+                    </p>
+                  </div>
+                </div>
+              </div>
+
+              {/* File list */}
+              {fileDetails.length > 0 && (
+                <div className="mt-4 bg-gray-50 dark:bg-gray-700 rounded-lg p-4">
+                  <h4 className="font-medium text-gray-700 dark:text-gray-300 mb-2">
+                    Selected Files ({fileDetails.length})
+                  </h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {fileDetails.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded"
+                      >
+                        <div className="flex items-center">
+                          <FiFile className="text-emerald-500 mr-2" />
+                          <div className="text-sm">
+                            <p className="text-gray-700 dark:text-gray-300 font-medium">{file.name}</p>
+                            <p className="text-gray-500 dark:text-gray-400">{file.size}</p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeFile(index)}
+                          className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                        >
+                          <FiX />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {/* Google Drive File Selection */}
+          {uploadMethod === "drive" && (
+            <div className="mt-6">
+              <GoogleDrivePicker onFileSelect={handleDriveFileSelect} />
+
+              {/* Drive File list */}
+              {driveFiles.length > 0 && (
+                <div className="mt-4 bg-blue-50 dark:bg-blue-900/20 rounded-lg p-4">
+                  <h4 className="font-medium text-blue-700 dark:text-blue-300 mb-2">
+                    Selected Files from Google Drive ({driveFiles.length})
+                  </h4>
+                  <div className="space-y-2 max-h-40 overflow-y-auto">
+                    {driveFiles.map((file, index) => (
+                      <div
+                        key={index}
+                        className="flex items-center justify-between bg-white dark:bg-gray-800 p-2 rounded"
+                      >
+                        <div className="flex items-center">
+                          {file.iconUrl && (
+                            <img src={file.iconUrl || "/placeholder.svg"} alt="" className="w-5 h-5 mr-2" />
+                          )}
+                          <div className="text-sm">
+                            <p className="text-gray-700 dark:text-gray-300 font-medium">{file.name}</p>
+                            <p className="text-gray-500 dark:text-gray-400">
+                              {file.sizeBytes ? formatFileSize(Number.parseInt(file.sizeBytes)) : "Size unknown"}
+                            </p>
+                          </div>
+                        </div>
+                        <button
+                          type="button"
+                          onClick={() => removeDriveFile(index)}
+                          className="text-red-500 hover:text-red-700 dark:hover:text-red-400"
+                        >
+                          <FiX />
+                        </button>
+                      </div>
+                    ))}
+                  </div>
+                </div>
+              )}
+            </div>
+          )}
+
+          {loading && uploadProgress > 0 && uploadMethod === "local" && (
             <div className="mt-6">
               <div className="flex items-center justify-between mb-1">
                 <p className="text-sm text-gray-600 dark:text-gray-400">Uploading...</p>
@@ -564,7 +711,11 @@ const UploadResource = () => {
           <div className="flex justify-end">
             <button
               type="submit"
-              className="bg-gradient-to-r from-emerald-600 to-teal-600 text-white py-3 px-6 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-emerald-500 focus:ring-offset-2 disabled:opacity-50 transition-all duration-300 flex items-center space-x-2 shadow-md"
+              className={`py-3 px-6 rounded-lg font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-offset-2 disabled:opacity-50 transition-all duration-300 flex items-center space-x-2 shadow-md ${
+                uploadMethod === "local"
+                  ? "bg-gradient-to-r from-emerald-600 to-teal-600 text-white focus:ring-emerald-500"
+                  : "bg-gradient-to-r from-blue-600 to-indigo-600 text-white focus:ring-blue-500"
+              }`}
               disabled={loading}
             >
               {loading ? (
@@ -593,8 +744,17 @@ const UploadResource = () => {
                 </>
               ) : (
                 <>
-                  <FiUpload className="w-5 h-5" />
-                  <span>Upload Resource</span>
+                  {uploadMethod === "local" ? (
+                    <>
+                      <FiUpload className="w-5 h-5" />
+                      <span>Upload Resource</span>
+                    </>
+                  ) : (
+                    <>
+                      <FiCloud className="w-5 h-5" />
+                      <span>Save Google Drive Resource</span>
+                    </>
+                  )}
                 </>
               )}
             </button>
@@ -606,4 +766,3 @@ const UploadResource = () => {
 }
 
 export default UploadResource
-

@@ -1,7 +1,7 @@
 "use client"
 
 import { useState, useEffect } from "react"
-import { useParams, Link, useNavigate } from "react-router-dom"
+import { useParams, useNavigate } from "react-router-dom"
 import { useAuth } from "../contexts/AuthContext"
 import api from "../services/api"
 import ReviewForm from "../components/resources/ReviewForm"
@@ -18,6 +18,9 @@ import {
   FiBook,
   FiTrash2,
   FiAlertTriangle,
+  FiExternalLink,
+  FiFileText,
+  FiCloud,
 } from "react-icons/fi"
 import toast from "react-hot-toast"
 
@@ -29,7 +32,6 @@ const ResourceDetails = () => {
   const [loading, setLoading] = useState(true)
   const [error, setError] = useState(null)
   const [isBookmarked, setIsBookmarked] = useState(false)
-  const [relatedResources, setRelatedResources] = useState([])
   const [showDeleteConfirm, setShowDeleteConfirm] = useState(false)
   const [deleteLoading, setDeleteLoading] = useState(false)
 
@@ -41,17 +43,9 @@ const ResourceDetails = () => {
     try {
       setLoading(true)
       const response = await api.get(`/api/resources/${id}`)
+      console.log("Resource data:", response.data)
       setResource(response.data)
       setIsBookmarked(response.data.isBookmarked)
-
-      // Fetch related resources
-      if (response.data.subject && response.data.subject._id) {
-        const relatedResponse = await api.get(`/api/resources?subject=${response.data.subject._id}&limit=3`)
-        // Filter out the current resource
-        const filtered = relatedResponse.data.filter((item) => item._id !== id).slice(0, 3)
-        setRelatedResources(filtered)
-      }
-
       setError(null)
     } catch (err) {
       console.error("Error fetching resource details:", err)
@@ -62,40 +56,34 @@ const ResourceDetails = () => {
     }
   }
 
-
-  const handleDownload = async () => {
+  const handleDownload = async (file) => {
     try {
-      const response = await api.get(`/api/resources/${id}/download`, {
-        responseType: "blob",
-        headers: {
-          Authorization: `Bearer ${localStorage.getItem("token")}`,
-        },
-      });
-  
-      const url = window.URL.createObjectURL(new Blob([response.data]));
-      const link = document.createElement("a");
-      link.href = url;
-      const filename = resource.title ? `${resource.title}.${resource.fileType || "file"}` : "download";
-      link.setAttribute("download", filename);
-      document.body.appendChild(link);
-      link.click();
-      document.body.removeChild(link);
-      window.URL.revokeObjectURL(url);
-  
-      toast.success("Download started");
-    } catch (err) {
-      if (err.response) {
-        if (err.response.status === 404) {
-          toast.error("Resource not found. It may have been deleted or moved.");
-        } else {
-          toast.error("Failed to download resource: " + err.response.data.message);
-        }
-      } else {
-        toast.error("Failed to download resource. Please check your connection.");
+      if (!file || !file.downloadUrl) {
+        toast.error("Download URL is missing")
+        return
       }
-      console.error("Error downloading resource:", err);
+
+      // Increment the download count via API
+      await api.post(`/api/resources/${id}/increment-downloads`)
+
+      // Open the download URL in a new tab
+      window.open(file.downloadUrl, "_blank")
+
+      toast.success("Download started")
+    } catch (err) {
+      console.error("Error downloading resource:", err)
+      toast.error("Failed to download resource. Please try again later.")
     }
-  };
+  }
+
+  const handleViewFile = (file) => {
+    if (!file || !file.viewUrl) {
+      toast.error("View URL is missing")
+      return
+    }
+
+    window.open(file.viewUrl, "_blank")
+  }
 
   const handleBookmark = async () => {
     if (!currentUser) {
@@ -157,6 +145,38 @@ const ResourceDetails = () => {
     if (typeof resource.branch === "string") return resource.branch
     if (typeof resource.branch === "object" && resource.branch.name) return resource.branch.name
     return ""
+  }
+
+  const getStorageLabel = () => {
+    const firstFile = resource?.files?.[0]
+    if (!firstFile) return "Unavailable"
+
+    if (firstFile.source === "drive") return "Google Drive"
+    if (firstFile.source === "cloudinary") return "Cloudinary"
+    if (firstFile.source === "local") return "Local Server"
+
+    return "Unknown"
+  }
+
+  // Get file icon based on mimetype
+  const getFileIcon = (file) => {
+    const mimeType = file.mimetype || file.mimeType || ""
+
+    if (mimeType.includes("pdf")) {
+      return "text-red-500"
+    } else if (mimeType.includes("word") || mimeType.includes("document")) {
+      return "text-blue-500"
+    } else if (mimeType.includes("spreadsheet") || mimeType.includes("excel")) {
+      return "text-green-500"
+    } else if (mimeType.includes("presentation") || mimeType.includes("powerpoint")) {
+      return "text-orange-500"
+    } else if (mimeType.includes("image")) {
+      return "text-purple-500"
+    } else if (mimeType.includes("zip") || mimeType.includes("compressed")) {
+      return "text-yellow-500"
+    } else {
+      return "text-gray-500"
+    }
   }
 
   if (loading) {
@@ -249,7 +269,9 @@ const ResourceDetails = () => {
               )}
               <button
                 onClick={handleBookmark}
-                className={`text-3xl focus:outline-none transition-transform hover:scale-110 ${isBookmarked ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"}`}
+                className={`text-3xl focus:outline-none transition-transform hover:scale-110 ${
+                  isBookmarked ? "text-yellow-500" : "text-gray-400 hover:text-yellow-500"
+                }`}
                 title={isBookmarked ? "Remove bookmark" : "Bookmark this resource"}
               >
                 <FiBookmark className={`w-6 h-6 ${isBookmarked ? "fill-yellow-500 text-yellow-500" : ""}`} />
@@ -325,13 +347,66 @@ const ResourceDetails = () => {
             </div>
           </div>
 
-          <div className="flex justify-center">
-            <button
-              onClick={handleDownload}
-              className="bg-gradient-to-r from-blue-600 to-purple-600 text-white px-8 py-3 rounded-md font-semibold hover:opacity-90 focus:outline-none focus:ring-2 focus:ring-blue-500 focus:ring-offset-2 shadow-md transition-all flex items-center gap-2"
-            >
-              <FiDownload /> Download Resource
-            </button>
+          {/* Files Section */}
+          <div className="mb-8">
+            <h3 className="text-lg font-semibold mb-4 dark:text-white flex items-center">
+              <FiFileText className="mr-2 text-blue-500" /> Files
+            </h3>
+            {resource.files && resource.files.length > 0 ? (
+              <div className="space-y-4">
+                {resource.files.map((file, index) => (
+                  <div
+                    key={index}
+                    className="bg-gray-50 dark:bg-gray-700 p-4 rounded-lg flex justify-between items-center"
+                  >
+                    <div className="flex items-center">
+                      <div className="bg-blue-100 dark:bg-blue-900/30 p-3 rounded-full mr-3">
+                        {file.source === "drive" ? (
+                          <FiCloud className="text-blue-500" />
+                        ) : (
+                          <FiFileText className={getFileIcon(file)} />
+                        )}
+                      </div>
+                      <div>
+                        <p className="font-medium dark:text-white">{file.originalname || file.name || file.filename}</p>
+                        <p className="text-sm text-gray-500 dark:text-gray-400 flex items-center">
+                          {file.size ? `${(file.size / (1024 * 1024)).toFixed(2)} MB` : "Size unknown"}
+                          {file.source === "drive" && (
+                            <span className="ml-2 bg-blue-100 dark:bg-blue-900/50 text-blue-700 dark:text-blue-300 text-xs px-2 py-0.5 rounded-full">
+                              Google Drive
+                            </span>
+                          )}
+                        </p>
+                      </div>
+                    </div>
+                    <div className="flex space-x-2">
+                      {file.viewUrl && (
+                        <button
+                          onClick={() => handleViewFile(file)}
+                          className="bg-blue-100 dark:bg-blue-900/30 text-blue-600 dark:text-blue-400 p-2 rounded-full hover:bg-blue-200 dark:hover:bg-blue-800/50 transition-colors"
+                          title="View file"
+                        >
+                          <FiExternalLink />
+                        </button>
+                      )}
+                      {file.downloadUrl && (
+                        <button
+                          onClick={() => handleDownload(file)}
+                          className="bg-green-100 dark:bg-green-900/30 text-green-600 dark:text-green-400 p-2 rounded-full hover:bg-green-200 dark:hover:bg-green-800/50 transition-colors"
+                          title="Download file"
+                        >
+                          <FiDownload />
+                        </button>
+                      )}
+                    </div>
+                  </div>
+                ))}
+              </div>
+            ) : (
+              <div className="bg-yellow-50 dark:bg-yellow-900/20 text-yellow-700 dark:text-yellow-400 p-4 rounded-lg text-center">
+                No files available for this resource.
+              </div>
+            )}
           </div>
         </div>
       </div>
@@ -361,58 +436,34 @@ const ResourceDetails = () => {
               Resource Information
             </h2>
             <ul className="space-y-3">
-              <li className="flex justify-between">
+              <li className="grid grid-cols-[100px_1fr] gap-3 items-start">
                 <span className="text-gray-600 dark:text-gray-400">Format:</span>
-                <span className="font-medium dark:text-white uppercase">{resource.fileType}</span>
+                <span className="font-medium dark:text-white uppercase text-right">{resource.fileType}</span>
               </li>
-              <li className="flex justify-between">
+              <li className="grid grid-cols-[100px_1fr] gap-3 items-start">
                 <span className="text-gray-600 dark:text-gray-400">Branch:</span>
-                <span className="font-medium dark:text-white">{getBranchName()}</span>
+                <span className="font-medium dark:text-white text-right break-words">{getBranchName()}</span>
               </li>
-              <li className="flex justify-between">
+              <li className="grid grid-cols-[100px_1fr] gap-3 items-start">
                 <span className="text-gray-600 dark:text-gray-400">Subject:</span>
-                <span className="font-medium dark:text-white">{getSubjectName()}</span>
+                <span className="font-medium dark:text-white text-right break-words">{getSubjectName()}</span>
               </li>
-              <li className="flex justify-between">
+              <li className="grid grid-cols-[100px_1fr] gap-3 items-start">
                 <span className="text-gray-600 dark:text-gray-400">Semester:</span>
-                <span className="font-medium dark:text-white">{resource.semester}</span>
+                <span className="font-medium dark:text-white text-right">{resource.semester}</span>
               </li>
-              <li className="flex justify-between">
+              <li className="grid grid-cols-[100px_1fr] gap-3 items-start">
                 <span className="text-gray-600 dark:text-gray-400">Uploaded:</span>
-                <span className="font-medium dark:text-white">{new Date(resource.createdAt).toLocaleDateString()}</span>
+                <span className="font-medium dark:text-white text-right">
+                  {new Date(resource.createdAt).toLocaleDateString()}
+                </span>
+              </li>
+              <li className="grid grid-cols-[100px_1fr] gap-3 items-start">
+                <span className="text-gray-600 dark:text-gray-400">Storage:</span>
+                <span className="font-medium dark:text-white text-right">{getStorageLabel()}</span>
               </li>
             </ul>
           </div>
-
-          {relatedResources.length > 0 && (
-            <div className="bg-white dark:bg-gray-800 rounded-lg shadow-lg p-6 border border-gray-200 dark:border-gray-700">
-              <h2 className="text-lg font-bold mb-4 dark:text-white bg-gradient-to-r from-blue-600 to-purple-600 bg-clip-text text-transparent">
-                Related Resources
-              </h2>
-              <div className="space-y-4">
-                {relatedResources.map((related) => (
-                  <Link
-                    key={related._id}
-                    to={`/resources/${related._id}`}
-                    className="block p-3 rounded-md hover:bg-gray-50 dark:hover:bg-gray-700 transition-colors"
-                  >
-                    <h3 className="font-medium text-blue-600 dark:text-blue-400 mb-1">{related.title}</h3>
-                    <div className="flex items-center text-xs text-gray-500 dark:text-gray-400 gap-3">
-                      <span className="flex items-center gap-1">
-                        <FiStar className="text-yellow-500" /> {related.averageRating.toFixed(1)}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <FiDownload /> {related.downloads}
-                      </span>
-                      <span className="flex items-center gap-1">
-                        <FiEye /> {related.views}
-                      </span>
-                    </div>
-                  </Link>
-                ))}
-              </div>
-            </div>
-          )}
         </div>
       </div>
     </div>

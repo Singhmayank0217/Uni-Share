@@ -15,7 +15,6 @@ import Bookmarks from "./pages/Bookmarks"
 import StudyGroups from "./pages/StudyGroups"
 import Leaderboard from "./pages/Leaderboard"
 import ResetPassword from "./pages/ResetPassword"
-import GitHubCallback from "./components/auth/GitHubCallback"
 import PrivateRoute from "./components/auth/PrivateRoute"
 import "./App.css"
 
@@ -32,7 +31,6 @@ function App() {
                 <Route path="/login" element={<Login />} />
                 <Route path="/register" element={<Register />} />
                 <Route path="/reset-password/:token" element={<ResetPassword />} />
-                <Route path="/auth/github/callback" element={<GitHubCallback />} />
                 <Route path="/resources/:id" element={<ResourceDetails />} />
                 <Route
                   path="/dashboard"

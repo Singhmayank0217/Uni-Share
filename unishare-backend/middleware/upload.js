@@ -35,7 +35,7 @@ const storage = multer.diskStorage({
       }
       cb(null, groupDir)
     } else {
-      // For resources
+      // For resources - store files in a persistent location
       cb(null, resourcesUploadsDir)
     }
   },
@@ -61,4 +61,5 @@ const upload = multer({
   },
 })
 
+// Export the upload middleware
 export default upload
